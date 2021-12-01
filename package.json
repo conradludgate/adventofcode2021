@@ -1,7 +1,7 @@
 {
-  "name": "setup",
+  "name": "aoc",
   "version": "1.0.0",
-  "main": "setup.js",
+  "main": "aoc.js",
   "license": "MIT",
   "dependencies": {
     "jsdom": "^18.1.1",
