@@ -14,15 +14,12 @@ impl Challenge for Day01 {
     }
 
     fn part_one(&self) -> usize {
-        let offset = &self.0[1..];
-        self.0.iter().zip(offset).filter(|(&a, &b)| b > a).count()
+        self.0.array_windows().filter(|[a, b]| b > a).count()
     }
 
     fn part_two(&self) -> usize {
         let window_sum = self.0.array_windows().map(|[a, b, c]| a + b + c).collect::<Vec<_>>();
-
-        let offset = &window_sum[1..];
-        window_sum.iter().zip(offset).filter(|(&a, &b)| b > a).count()
+        window_sum.array_windows().filter(|[a, b]| b > a).count()
     }
 }
 

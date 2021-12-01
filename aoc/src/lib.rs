@@ -34,20 +34,25 @@ pub trait Challenge: Sized {
         let day = Self::NAME[3..].parse::<i32>().unwrap();
         let url = format!("https://adventofcode.com/{}/day/{}/answer", YEAR, day);
 
-        let p1 = challenge.part_one();
-        println!("\tAnswer to part one: {}", p1);
-        client
-            .post(&url)
-            .form(&[("level", 1), ("answer", p1)].into_iter().collect::<HashMap<_, _>>())
-            .send()
-            .unwrap();
+        let file = Path::new("challenges").join(Self::NAME).join("README.md");
+        let readme = std::fs::read_to_string(file).expect("could not read file");
 
-        let p2 = challenge.part_two();
-        println!("\tAnswer to part two: {}\n", p2);
-        client
-            .post(&url)
-            .form(&[("level", 2), ("answer", p2)].into_iter().collect::<HashMap<_, _>>())
-            .send()
-            .unwrap();
+        if !readme.contains("--- Part Two ---") {
+            let p1 = challenge.part_one();
+            println!("\tAnswer to part one: {}", p1);
+            client
+                .post(&url)
+                .form(&[("level", 1), ("answer", p1)].into_iter().collect::<HashMap<_, _>>())
+                .send()
+                .unwrap();
+        } else {
+            let p2 = challenge.part_two();
+            println!("\tAnswer to part two: {}\n", p2);
+            client
+                .post(&url)
+                .form(&[("level", 2), ("answer", p2)].into_iter().collect::<HashMap<_, _>>())
+                .send()
+                .unwrap();
+        }
     }
 }
