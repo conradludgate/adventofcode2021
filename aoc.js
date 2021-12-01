@@ -6,13 +6,13 @@ const fetch = require("node-fetch");
 const { pipeline } = require('stream/promises');
 const replace = require('replace-in-file');
 
-const year = 2021;
+const year = (new Date()).getFullYear();
+const day = (new Date()).getDate();
+let padded = String(day).padStart(2, '0');
+let outdir = `challenges/day${padded}`;
 
-async function setup(day) {
+async function setup() {
     console.log("=== SETUP ===");
-
-    let padded = String(day).padStart(2, '0');
-    let outdir = `challenges/day${padded}`;
 
     // create rust project
     await fs.cp("challenges/day00", outdir, {
@@ -31,14 +31,11 @@ async function setup(day) {
     });
     await pipeline(input.body, createWriteStream(`${outdir}/input.txt`));
 
-    await get_description(day);
+    await get_description();
 }
 
-async function get_description(day) {
+async function get_description() {
     console.log("=== UPDATE ===");
-
-    let padded = String(day).padStart(2, '0');
-    let outdir = `challenges/day${padded}`;
 
     // download description and create readme
     const input = await fetch(`https://adventofcode.com/${year}/day/${day}`, {
@@ -47,16 +44,13 @@ async function get_description(day) {
     const dom = new JSDOM(await input.text());
 
     let md = "";
-    dom.window.document.querySelectorAll(".day-desc").forEach(e => md = md + "\n\n" + NodeHtmlMarkdown.translate(e.innerHTML, { emDelimiter: "**" }));
+    dom.window.document.querySelectorAll(".day-desc").forEach(e => md += NodeHtmlMarkdown.translate(e.innerHTML, { emDelimiter: "**" }) + "\n\n");
 
     await fs.writeFile(`${outdir}/README.md`, md);
 }
 
-let day = (new Date()).getDate();
-if (process.argv.length > 2 && process.argv[2] === "setup") {
-    setup(day);
-} else if (process.argv.length == 2) {
-    get_description(day);
+if (require('fs').existsSync(outdir)) {
+    get_description()
 } else {
-    console.error("unknown input");
+    setup()
 }
