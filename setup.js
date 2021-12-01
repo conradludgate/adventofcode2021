@@ -6,7 +6,7 @@ const fetch = require("node-fetch");
 const { pipeline } = require('stream/promises');
 const replace = require('replace-in-file');
 
-const year = 2020;
+const year = 2021;
 
 async function index(day) {
     let padded = String(day).padStart(2, '0');
@@ -41,7 +41,7 @@ async function index(day) {
             'Cookie': `session=${process.env.AOC_SESSION}`
         }
     });
-    await pipeline(input.body, createWriteStream(`${outdir}/index.txt`));
+    await pipeline(input.body, createWriteStream(`${outdir}/input.txt`));
 }
 
 index(process.argv[2])

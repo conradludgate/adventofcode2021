@@ -10,7 +10,7 @@ pub trait Challenge: Sized {
 
     fn run() {
         let file = Path::new("challenges").join(Self::NAME).join("input.txt");
-        let input = std::fs::read_to_string(file).expect("could not read file");
+        let input = std::fs::read_to_string(dbg!(file)).expect("could not read file");
         let challenge = Self::new(input);
         println!("\nRunning challenge {}", Self::NAME);
         println!("\tAnswer to part one: {}", challenge.part_one());
