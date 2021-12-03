@@ -24,6 +24,11 @@ where
     parse(digit1)(input)
 }
 
+pub fn binary(input: &str) -> IResult<&str, usize>
+{
+    map_res(digit1, |s| usize::from_str_radix(s, 2))(input)
+}
+
 pub fn lines<'a, O, E, F>(f: F) -> impl FnMut(&'a str) -> IResult<&str, Vec<O>, E>
 where
     F: Parser<&'a str, O, E>,
