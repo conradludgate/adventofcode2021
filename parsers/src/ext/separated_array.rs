@@ -27,7 +27,7 @@ where
             input = self.g.parse(input)?.0;
             let (i1, n) = self.f.parse(input)?;
             res.push(n);
-            input = i1
+            input = i1;
         }
 
         Ok((input, res.into_array()))

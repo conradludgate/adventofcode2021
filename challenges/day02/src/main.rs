@@ -50,7 +50,7 @@ impl Challenge for Day02 {
 }
 
 fn main() {
-    Day02::run()
+    Day02::run();
 }
 
 #[cfg(test)]

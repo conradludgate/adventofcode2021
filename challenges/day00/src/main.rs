@@ -20,5 +20,5 @@ impl Challenge for Day00 {
 }
 
 fn main() {
-    Day00::run()
+    Day00::run();
 }

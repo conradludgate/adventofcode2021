@@ -30,7 +30,7 @@ impl Board {
         self.0.iter_mut().for_each(|row| {
             row.0.iter_mut().for_each(|col| {
                 col.marked = col.marked || col.number == n;
-            })
+            });
         });
         self.has_row() || self.has_col()
     }
@@ -64,10 +64,7 @@ impl Challenge for Day04 {
         let parse_cell = take(2usize) // each bingo cell is 2 chars
             .map(str::trim) // remove leading space on single digit nums
             .map_res(FromStr::from_str) // convert digits to decimal
-            .map(|n| Cell {
-                marked: false,
-                number: n,
-            });
+            .map(|number| Cell { marked: false, number });
 
         let parse_numbers = number.separated_list1(tag(",")); // bingo numbers are seperated by commas
         let parse_boards = parse_cell
@@ -89,10 +86,10 @@ impl Challenge for Day04 {
         self.numbers
             .iter()
             .find_map(|n| {
+                // find the first winner
                 boards
                     .iter_mut()
-                    .filter_map(|b| b.is_bingo(*n).then(|| b.count_unmarked() * n))
-                    .next()
+                    .find_map(|b| b.is_bingo(*n).then(|| b.count_unmarked() * n))
             })
             .unwrap()
     }
@@ -102,6 +99,7 @@ impl Challenge for Day04 {
         self.numbers
             .iter()
             .find_map(|n| {
+                // find the last winner
                 let completed = boards.drain_filter(|board| board.is_bingo(*n)).last();
                 boards
                     .is_empty()
@@ -114,7 +112,7 @@ impl Challenge for Day04 {
 }
 
 fn main() {
-    Day04::run()
+    Day04::run();
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use nom::{error::FromExternalError, Parser, IResult};
+use nom::{error::FromExternalError, IResult, Parser};
 
 pub use self::{
     map_res::MapRes,

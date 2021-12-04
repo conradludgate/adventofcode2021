@@ -89,7 +89,7 @@ impl Challenge for Day03 {
 }
 
 fn main() {
-    Day03::run()
+    Day03::run();
 }
 
 #[cfg(test)]

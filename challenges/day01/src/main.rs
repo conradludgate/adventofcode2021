@@ -1,7 +1,7 @@
 #![feature(array_windows)]
 
 use aoc::Challenge;
-use nom::{IResult, Parser, character::complete::line_ending};
+use nom::{character::complete::line_ending, IResult, Parser};
 use parsers::{number, ParserExt};
 
 struct Day01(Vec<i32>);
@@ -24,7 +24,7 @@ impl Challenge for Day01 {
 }
 
 fn main() {
-    Day01::run()
+    Day01::run();
 }
 
 #[cfg(test)]

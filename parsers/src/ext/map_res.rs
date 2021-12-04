@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 
-use nom::{Parser, error::{FromExternalError, ErrorKind}, Err};
-
+use nom::{
+    error::{ErrorKind, FromExternalError},
+    Err, Parser,
+};
 
 pub struct MapRes<F, G, O1> {
     pub(crate) f: F,
