@@ -4,9 +4,9 @@ use generic_vec::ArrayVec;
 use nom::{
     character::complete::{digit1, line_ending},
     combinator::map_res,
-    error::{FromExternalError, ParseError},
+    error::{ErrorKind, FromExternalError, ParseError},
     multi::{many1, separated_list1},
-    IResult, InputLength, Parser,
+    Err, IResult, InputIter, InputLength, InputTake, Parser,
 };
 
 mod ext;
@@ -56,7 +56,7 @@ where
     lines(many1(f))
 }
 
-pub fn separated_list_n<I, O, O2, E, F, G, const N: usize>(
+pub fn separated_array<I, O, O2, E, F, G, const N: usize>(
     mut sep: G,
     mut f: F,
 ) -> impl FnMut(I) -> IResult<I, [O; N], E>
@@ -86,5 +86,17 @@ where
         }
 
         Ok((i, res.into_array()))
+    }
+}
+
+pub fn skip<Input, Error: ParseError<Input>>(
+    count: usize,
+) -> impl Fn(Input) -> IResult<Input, (), Error>
+where
+    Input: InputIter + InputTake,
+{
+    move |i: Input| match i.slice_index(count) {
+        Err(_needed) => Err(Err::Error(Error::from_error_kind(i, ErrorKind::Eof))),
+        Ok(index) => Ok((i.take_split(index).0, ())),
     }
 }

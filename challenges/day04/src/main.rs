@@ -1,15 +1,14 @@
 #![feature(drain_filter)]
-use std::{fmt::Debug, iter::Sum, str::FromStr};
+use std::{fmt::Debug, str::FromStr};
 
 use ansi_term::Style;
 use aoc::Challenge;
 use nom::{
     bytes::complete::{tag, take},
-    multi::separated_list1,
     sequence::separated_pair,
     IResult, Parser,
 };
-use parsers::{number, separated_list_n, ParserExt};
+use parsers::{number, ParserExt};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Day04 {
@@ -25,41 +24,6 @@ struct Row(pub [Cell; 5]);
 struct Cell {
     pub marked: bool,
     pub number: usize,
-}
-
-impl Debug for Cell {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut style = Style::default();
-        style.is_strikethrough = self.marked;
-        let n = format!("{:02}", self.number);
-        write!(f, "{}", style.paint(n))
-    }
-}
-
-impl Debug for Row {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.iter().try_for_each(|cell| write!(f, "{:?} ", cell))
-    }
-}
-
-impl Debug for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.iter().try_for_each(|row| write!(f, "\n{:?}", row))
-    }
-}
-
-impl<'a> Sum<&'a Cell> for usize {
-    fn sum<I: Iterator<Item = &'a Cell>>(iter: I) -> Self {
-        iter.filter(|cell| !cell.marked)
-            .map(|cell| cell.number)
-            .sum()
-    }
-}
-
-impl<'a> Sum<&'a Row> for usize {
-    fn sum<I: Iterator<Item = &'a Row>>(iter: I) -> Self {
-        iter.map(|row| row.0.iter().sum::<usize>()).sum()
-    }
 }
 
 impl Board {
@@ -83,7 +47,16 @@ impl Board {
     }
 
     fn count_unmarked(&self) -> usize {
-        self.0.iter().sum::<usize>()
+        self.0
+            .iter()
+            .map(|row| {
+                row.0
+                    .iter()
+                    .filter(|cell| !cell.marked)
+                    .map(|cell| cell.number)
+                    .sum::<usize>()
+            })
+            .sum()
     }
 }
 
@@ -91,25 +64,27 @@ impl Challenge for Day04 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn new(input: &str) -> IResult<&str, Self> {
-        let parse_cell = take(2usize) // each bingo num is 2 chars
+        let parse_cell = take(2usize) // each bingo cell is 2 chars
             .map(str::trim) // remove leading space on single digit nums
-            .map_res(FromStr::from_str)
+            .map_res(FromStr::from_str) // convert digits to decimal
             .map(|n| Cell {
                 marked: false,
                 number: n,
             });
 
-        let parse_board_row = separated_list_n(tag(" "), parse_cell).map(Row);
-        let parse_board = separated_list_n(tag("\n"), parse_board_row).map(Board);
-        let parse_numbers = separated_list1(tag(","), number);
+        let parse_numbers = number.separated_list1(tag(",")); // bingo numbers are seperated by commas
+        let parse_boards = parse_cell
+            .separated_array(tag(" ")) // cells are seperated by spaces
+            .map(Row) // 5 cells form a row
+            .separated_array(tag("\n")) // rows are seperated by newlines
+            .map(Board) // 5 rows form a board
+            .separated_list1(tag("\n\n")); // boards are seperated by double newlines
 
-        separated_pair(
-            parse_numbers,
-            take(2usize),
-            separated_list1(tag("\n\n"), parse_board),
-        )
-        .map(|(numbers, boards)| Self { numbers, boards })
-        .parse(input)
+        parse_numbers // the input consists of the bingo numbers
+            .skip(tag("\n\n")) // then 2 new lines
+            .and(parse_boards) // then the bingo boards
+            .map(|(numbers, boards)| Self { numbers, boards })
+            .parse(input)
     }
 
     fn part_one(&self) -> usize {
@@ -188,5 +163,26 @@ mod tests {
     fn part_two() {
         let output = Day04::new(INPUT).unwrap().1;
         assert_eq!(output.part_two(), 1924);
+    }
+}
+
+impl Debug for Cell {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut style = Style::default();
+        style.is_strikethrough = self.marked;
+        let n = format!("{:02}", self.number);
+        write!(f, "{}", style.paint(n))
+    }
+}
+
+impl Debug for Row {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.iter().try_for_each(|cell| write!(f, "{:?} ", cell))
+    }
+}
+
+impl Debug for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.iter().try_for_each(|row| write!(f, "\n{:?}", row))
     }
 }
