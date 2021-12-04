@@ -1,5 +1,5 @@
 use aoc::Challenge;
-use nom::{IResult, branch::alt, combinator::map, sequence::tuple, bytes::complete::tag};
+use nom::{IResult, branch::alt, combinator::map, sequence::tuple, bytes::complete::tag, Parser};
 use parsers::{number, lines};
 
 #[derive(PartialEq, Debug)]
@@ -24,8 +24,8 @@ struct Day02(pub Vec<Dir>);
 impl Challenge for Day02 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
-    fn new(input: String) -> Self {
-        Self(lines(Dir::parse)(&input).unwrap().1)
+    fn new(input: &str) -> IResult<&str, Self> {
+        lines(Dir::parse).map(Day02).parse(input)
     }
 
     fn part_one(&self) -> usize {
@@ -63,9 +63,7 @@ mod tests {
 
     use crate::{Day02, Dir};
 
-    #[test]
-    fn parse() {
-        let input = r"forward 5
+    const INPUT: &str = "forward 5
 down 5
 forward 8
 up 3
@@ -73,7 +71,9 @@ down 8
 forward 2
 ";
 
-        let output = Day02::new(input.to_owned());
+    #[test]
+    fn parse() {
+        let output = Day02::new(INPUT).unwrap().1;
 
         assert_eq!(output.0, vec![
             Dir::Forward(5),
@@ -87,15 +87,7 @@ forward 2
 
     #[test]
     fn part_one() {
-        let input = r"forward 5
-down 5
-forward 8
-up 3
-down 8
-forward 2
-";
-
-        let output = Day02::new(input.to_owned());
+        let output = Day02::new(INPUT).unwrap().1;
 
         let x = output.part_one();
         assert_eq!(x, 150);
@@ -103,15 +95,7 @@ forward 2
 
     #[test]
     fn part_two() {
-        let input = r"forward 5
-down 5
-forward 8
-up 3
-down 8
-forward 2
-";
-
-        let output = Day02::new(input.to_owned());
+        let output = Day02::new(INPUT).unwrap().1;
 
         let x = output.part_two();
         assert_eq!(x, 900);

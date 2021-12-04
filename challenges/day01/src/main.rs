@@ -1,6 +1,7 @@
 #![feature(array_windows)]
 
 use aoc::Challenge;
+use nom::{IResult, Parser};
 use parsers::{lines, number};
 
 struct Day01(Vec<i32>);
@@ -8,9 +9,8 @@ struct Day01(Vec<i32>);
 impl Challenge for Day01 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
-    fn new(input: String) -> Self {
-        let (_, nums) = lines(number)(&input).unwrap();
-        Self(nums)
+    fn new(input: &str) -> IResult<&str, Self> {
+        lines(number).map(Day01).parse(input)
     }
 
     fn part_one(&self) -> usize {

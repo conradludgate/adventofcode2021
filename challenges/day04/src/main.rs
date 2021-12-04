@@ -4,30 +4,29 @@ use ansi_term::Style;
 use aoc::Challenge;
 use nom::{
     bytes::complete::{tag, take},
-    combinator::map,
     multi::separated_list1,
     sequence::separated_pair,
     IResult, Parser,
 };
-use parsers::{number, parse, separated_list_n, ParserExt};
+use parsers::{number, separated_list_n, ParserExt};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Day04 {
     numbers: Vec<usize>,
-    bingos: Vec<Bingo>,
+    boards: Vec<Board>,
 }
 
 #[derive(PartialEq, Clone, Copy)]
-struct Bingo(pub [BingoRow; 5]);
+struct Board(pub [Row; 5]);
 #[derive(PartialEq, Clone, Copy)]
-struct BingoRow(pub [BingoCell; 5]);
+struct Row(pub [Cell; 5]);
 #[derive(PartialEq, Clone, Copy)]
-struct BingoCell {
+struct Cell {
     pub marked: bool,
     pub number: usize,
 }
 
-impl Debug for BingoCell {
+impl Debug for Cell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut style = Style::default();
         style.is_strikethrough = self.marked;
@@ -36,7 +35,7 @@ impl Debug for BingoCell {
     }
 }
 
-impl Debug for BingoRow {
+impl Debug for Row {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in self.0 {
             write!(f, "{:?} ", i)?;
@@ -45,7 +44,7 @@ impl Debug for BingoRow {
     }
 }
 
-impl Debug for Bingo {
+impl Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in self.0 {
             write!(f, "\n{:?}", i)?;
@@ -54,27 +53,28 @@ impl Debug for Bingo {
     }
 }
 
-impl<'a> Sum<&'a BingoCell> for usize {
-    fn sum<I: Iterator<Item = &'a BingoCell>>(iter: I) -> Self {
+impl<'a> Sum<&'a Cell> for usize {
+    fn sum<I: Iterator<Item = &'a Cell>>(iter: I) -> Self {
         iter.filter(|cell| !cell.marked)
             .map(|cell| cell.number)
             .sum()
     }
 }
 
-impl<'a> Sum<&'a BingoRow> for usize {
-    fn sum<I: Iterator<Item = &'a BingoRow>>(iter: I) -> Self {
+impl<'a> Sum<&'a Row> for usize {
+    fn sum<I: Iterator<Item = &'a Row>>(iter: I) -> Self {
         iter.map(|row| row.0.iter().sum::<usize>()).sum()
     }
 }
 
-impl Bingo {
-    fn mark(&mut self, n: usize) {
+impl Board {
+    fn is_bingo(&mut self, n: usize) -> bool {
         self.0.iter_mut().for_each(|row| {
             row.0.iter_mut().for_each(|col| {
                 col.marked = col.marked || col.number == n;
             })
-        })
+        });
+        self.has_row() || self.has_col()
     }
 
     fn has_row(&self) -> bool {
@@ -96,16 +96,16 @@ impl Challenge for Day04 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn new(input: &str) -> IResult<&str, Self> {
-        let parse_cell = take(2usize)
-            .map(str::trim)
+        let parse_cell = take(2usize) // each bingo num is 2 chars
+            .map(str::trim) // remove leading space on single digit nums
             .map_res(FromStr::from_str)
-            .map(|n| BingoCell {
+            .map(|n| Cell {
                 marked: false,
                 number: n,
             });
 
-        let parse_board_row = separated_list_n(tag(" "), parse_cell).map(BingoRow);
-        let parse_board = separated_list_n(tag("\n"), parse_board_row).map(Bingo);
+        let parse_board_row = separated_list_n(tag(" "), parse_cell).map(Row);
+        let parse_board = separated_list_n(tag("\n"), parse_board_row).map(Board);
         let parse_numbers = separated_list1(tag(","), number);
 
         separated_pair(
@@ -113,36 +113,35 @@ impl Challenge for Day04 {
             take(2usize),
             separated_list1(tag("\n\n"), parse_board),
         )
-        .map(|(numbers, bingos)| Self { numbers, bingos })
+        .map(|(numbers, boards)| Self { numbers, boards })
         .parse(input)
     }
 
     fn part_one(&self) -> usize {
-        let mut bingos = self.bingos.clone();
-        for n in &self.numbers {
-            for bingo in &mut bingos {
-                bingo.mark(*n);
-                if bingo.has_row() || bingo.has_col() {
-                    return dbg!(bingo).count_unmarked() * n;
-                }
-            }
-        }
-        todo!()
+        let mut boards = self.boards.clone();
+        self.numbers
+            .iter()
+            .find_map(|n| {
+                boards
+                    .iter_mut()
+                    .filter_map(|b| b.is_bingo(*n).then(|| b.count_unmarked() * n))
+                    .next()
+            })
+            .unwrap()
     }
 
     fn part_two(&self) -> usize {
-        let mut bingos = self.bingos.clone();
+        let mut boards = self.boards.clone();
         for n in &self.numbers {
             let mut i = 0;
-            let mut len = bingos.len();
+            let mut len = boards.len();
             while i < len {
-                let bingo = &mut bingos[i];
-                bingo.mark(*n);
-                if bingo.has_row() || bingo.has_col() {
+                let board = &mut boards[i];
+                if board.is_bingo(*n) {
                     if len == 1 {
-                        return bingo.count_unmarked() * n;
+                        return board.count_unmarked() * n;
                     }
-                    bingos.remove(i);
+                    boards.remove(i);
                     len -= 1;
                 } else {
                     i += 1;

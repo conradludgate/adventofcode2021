@@ -1,7 +1,7 @@
 #![feature(drain_filter)]
 
 use aoc::Challenge;
-use nom::combinator::recognize;
+use nom::{combinator::recognize, IResult, Parser};
 use parsers::{binary, lines};
 
 #[derive(Debug, PartialEq)]
@@ -13,14 +13,14 @@ struct Day03 {
 impl Challenge for Day03 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
-    fn new(input: String) -> Self {
-        let (_, n) = recognize(binary)(&input).unwrap();
-        let (_, data) = lines(binary)(&input).unwrap();
-
-        Self {
-            bit_len: n.len(),
-            data,
-        }
+    fn new(input: &str) -> IResult<&str, Self> {
+        let (_, n) = recognize(binary).parse(input)?;
+        lines(binary)
+            .map(|data| Self {
+                bit_len: n.len(),
+                data,
+            })
+            .parse(input)
     }
 
     fn part_one(&self) -> usize {
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn parse() {
-        let output = Day03::new(TEST_INPUT.to_owned());
+        let output = Day03::new(TEST_INPUT).unwrap().1;
 
         assert_eq!(
             output,
@@ -143,13 +143,13 @@ mod tests {
 
     #[test]
     fn part_one() {
-        let output = Day03::new(TEST_INPUT.to_owned());
+        let output = Day03::new(TEST_INPUT).unwrap().1;
         assert_eq!(output.part_one(), 198)
     }
 
     #[test]
     fn part_two() {
-        let output = Day03::new(TEST_INPUT.to_owned());
+        let output = Day03::new(TEST_INPUT).unwrap().1;
         assert_eq!(output.part_two(), 230)
     }
 }
