@@ -1,8 +1,8 @@
 #![feature(array_windows)]
 
 use aoc::Challenge;
-use nom::{IResult, Parser};
-use parsers::{lines, number};
+use nom::{IResult, Parser, character::complete::line_ending};
+use parsers::{number, ParserExt};
 
 struct Day01(Vec<i32>);
 
@@ -10,7 +10,7 @@ impl Challenge for Day01 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn new(input: &str) -> IResult<&str, Self> {
-        lines(number).map(Day01).parse(input)
+        number.separated_list1(line_ending).map(Day01).parse(input)
     }
 
     fn part_one(&self) -> usize {
@@ -18,11 +18,7 @@ impl Challenge for Day01 {
     }
 
     fn part_two(&self) -> usize {
-        let window_sum = self
-            .0
-            .array_windows()
-            .map(|[a, b, c]| a + b + c)
-            .collect::<Vec<_>>();
+        let window_sum = self.0.array_windows().map(|[a, b, c]| a + b + c).collect::<Vec<_>>();
         window_sum.array_windows().filter(|[a, b]| b > a).count()
     }
 }

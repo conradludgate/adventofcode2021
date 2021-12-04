@@ -15,12 +15,7 @@ impl Challenge for Day03 {
 
     fn new(input: &str) -> IResult<&str, Self> {
         let (_, n) = recognize(binary).parse(input)?;
-        lines(binary)
-            .map(|data| Self {
-                bit_len: n.len(),
-                data,
-            })
-            .parse(input)
+        lines(binary).map(|data| Self { bit_len: n.len(), data }).parse(input)
     }
 
     fn part_one(&self) -> usize {
@@ -64,11 +59,7 @@ impl Challenge for Day03 {
 
             let oxy_bit = oxy.iter().filter(|&d| *d & bit == bit).count();
 
-            let oxy_keep = if oxy_bit < (oxy.len() - oxy_bit) {
-                0
-            } else {
-                bit
-            };
+            let oxy_keep = if oxy_bit < (oxy.len() - oxy_bit) { 0 } else { bit };
 
             oxy.drain_filter(|x| *x & bit != oxy_keep).for_each(|_| {});
 
@@ -84,11 +75,7 @@ impl Challenge for Day03 {
 
             let co2_bit = co2.iter().filter(|&d| *d & bit == bit).count();
 
-            let co2_keep = if co2_bit >= (co2.len() - co2_bit) {
-                0
-            } else {
-                bit
-            };
+            let co2_keep = if co2_bit >= (co2.len() - co2_bit) { 0 } else { bit };
 
             co2.drain_filter(|x| *x & bit != co2_keep).for_each(|_| {});
 
@@ -134,8 +121,8 @@ mod tests {
             Day03 {
                 bit_len: 5,
                 data: vec![
-                    0b00100, 0b11110, 0b10110, 0b10111, 0b10101, 0b01111, 0b00111, 0b11100,
-                    0b10000, 0b11001, 0b00010, 0b01010,
+                    0b00100, 0b11110, 0b10110, 0b10111, 0b10101, 0b01111, 0b00111, 0b11100, 0b10000, 0b11001, 0b00010,
+                    0b01010,
                 ],
             }
         )

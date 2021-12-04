@@ -1,102 +1,93 @@
-use std::{fmt::Debug, str::FromStr};
+#![feature(trace_macros)]
 
-use generic_vec::ArrayVec;
+use std::str::FromStr;
+
 use nom::{
+    bytes::complete::is_a,
     character::complete::{digit1, line_ending},
-    combinator::map_res,
-    error::{ErrorKind, FromExternalError, ParseError},
-    multi::{many1, separated_list1},
+    error::{ErrorKind, ParseError},
     Err, IResult, InputIter, InputLength, InputTake, Parser,
 };
 
 mod ext;
 pub use ext::*;
 
-pub fn parse<'a, O, F, E>(f: F) -> impl FnMut(&'a str) -> IResult<&str, O, E>
-where
-    O: FromStr,
-    F: Parser<&'a str, &'a str, E>,
-    E: FromExternalError<&'a str, <O as FromStr>::Err>,
-{
-    map_res(f, O::from_str)
-}
-
 pub fn number<O>(input: &str) -> IResult<&str, O>
 where
     O: FromStr,
 {
-    parse(digit1)(input)
+    digit1.map_res(FromStr::from_str).parse(input)
 }
 
 pub fn binary(input: &str) -> IResult<&str, usize> {
-    map_res(digit1, |s| usize::from_str_radix(s, 2))(input)
+    is_a("01").map_res(|s| usize::from_str_radix(s, 2)).parse(input)
 }
 
-pub fn lines<'a, O, E, F>(f: F) -> impl FnMut(&'a str) -> IResult<&str, Vec<O>, E>
+pub fn lines<'a, O, E, F>(f: F) -> impl Parser<&'a str, Vec<O>, E>
 where
     F: Parser<&'a str, O, E>,
     E: ParseError<&'a str>,
 {
-    separated_list1(line_ending, f)
+    f.separated_list1(line_ending)
 }
 
-pub fn all<I, O, E>(result: IResult<I, O, E>) -> O
-where
-    E: ParseError<I>,
-    nom::Err<E>: Debug,
-{
-    result.unwrap().1
-}
-
-pub fn grid<'a, O, E, F>(f: F) -> impl FnMut(&'a str) -> IResult<&str, Vec<Vec<O>>, E>
+pub fn grid<'a, O, E, F>(f: F) -> impl Parser<&'a str, Vec<Vec<O>>, E>
 where
     F: Parser<&'a str, O, E>,
     E: ParseError<&'a str>,
 {
-    lines(many1(f))
+    f.many1().separated_list1(line_ending)
 }
 
-pub fn separated_array<I, O, O2, E, F, G, const N: usize>(
-    mut sep: G,
-    mut f: F,
-) -> impl FnMut(I) -> IResult<I, [O; N], E>
+pub fn separated_array<I, O, O2, E, F, G, const N: usize>(sep: G, f: F) -> impl Parser<I, [O; N], E>
 where
     I: Clone + InputLength,
     F: Parser<I, O, E>,
     G: Parser<I, O2, E>,
     E: ParseError<I>,
 {
-    move |mut i: I| {
-        let mut res = ArrayVec::new();
+    f.separated_array(sep)
+}
 
-        // Parse the first element
-        match f.parse(i.clone()) {
-            Err(e) => return Err(e),
-            Ok((i1, o)) => {
-                res.push(o);
-                i = i1;
-            }
-        }
-
-        for _ in 1..N {
-            i = sep.parse(i)?.0;
-            let (i1, n) = f.parse(i)?;
-            res.push(n);
-            i = i1
-        }
-
-        Ok((i, res.into_array()))
+pub fn skip<I, E>(count: usize) -> impl Fn(I) -> IResult<I, (), E>
+where
+    E: ParseError<I>,
+    I: InputIter + InputTake,
+{
+    move |i: I| match i.slice_index(count) {
+        Err(_needed) => Err(Err::Error(E::from_error_kind(i, ErrorKind::Eof))),
+        Ok(index) => Ok((i.take_split(index).0, ())),
     }
 }
 
-pub fn skip<Input, Error: ParseError<Input>>(
-    count: usize,
-) -> impl Fn(Input) -> IResult<Input, (), Error>
-where
-    Input: InputIter + InputTake,
-{
-    move |i: Input| match i.slice_index(count) {
-        Err(_needed) => Err(Err::Error(Error::from_error_kind(i, ErrorKind::Eof))),
-        Ok(index) => Ok((i.take_split(index).0, ())),
-    }
+#[macro_export]
+/// Builds a pattern that can match tuple lists
+///
+/// ```
+/// let cons![a, b, c] = ((false, 1), Some(2));
+/// assert!(!a);
+/// assert_eq!(b, 1);
+/// c.expect("2");
+/// ```
+macro_rules! cons {
+    ($($elem:pat),+ $(,)?) => {
+        $crate::__cons_impl!($($elem),* =>)
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __cons_impl {
+    // reverse list
+    ($head:pat $(,$tail:pat)* => $($head2:pat),*) => {
+        $crate::__cons_impl!($($tail),* => $head $(,$head2)*)
+    };
+    // pick off front of reversed
+    (=> $tail:pat, $($head:pat),+) => {
+        ($crate::__cons_impl![=> $($head),*], $tail)
+    };
+    // base case
+    (=> $tail:pat) => {
+        $tail
+    };
 }

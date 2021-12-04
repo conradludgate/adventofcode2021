@@ -1,6 +1,6 @@
 use aoc::Challenge;
-use nom::{branch::alt, bytes::complete::tag, combinator::map, sequence::tuple, IResult, Parser};
-use parsers::{lines, number};
+use nom::{branch::alt, bytes::complete::tag, IResult, Parser};
+use parsers::*;
 
 #[derive(PartialEq, Debug)]
 enum Dir {
@@ -12,9 +12,9 @@ enum Dir {
 impl Dir {
     pub fn parse(input: &str) -> IResult<&str, Self> {
         alt((
-            map(tuple((tag("forward "), number)), |(_, n)| Dir::Forward(n)),
-            map(tuple((tag("down "), number)), |(_, n)| Dir::Down(n)),
-            map(tuple((tag("up "), number)), |(_, n)| Dir::Up(n)),
+            number.preceded_by(tag("forward ")).map(Dir::Forward),
+            number.preceded_by(tag("down ")).map(Dir::Down),
+            number.preceded_by(tag("up ")).map(Dir::Up),
         ))(input)
     }
 }

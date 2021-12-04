@@ -7,7 +7,7 @@ use nom::{
     bytes::complete::{tag, take},
     IResult, Parser,
 };
-use parsers::{number, ParserExt};
+use parsers::*;
 
 #[derive(Debug, PartialEq, Clone)]
 struct Day04 {
@@ -36,9 +36,7 @@ impl Board {
     }
 
     fn has_row(&self) -> bool {
-        self.0
-            .iter()
-            .any(|row| row.0.iter().all(|cell| cell.marked))
+        self.0.iter().any(|row| row.0.iter().all(|cell| cell.marked))
     }
 
     fn has_col(&self) -> bool {
@@ -167,8 +165,10 @@ mod tests {
 
 impl Debug for Cell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut style = Style::default();
-        style.is_strikethrough = self.marked;
+        let style = Style {
+            is_strikethrough: self.marked,
+            ..Style::default()
+        };
         let n = format!("{:02}", self.number);
         write!(f, "{}", style.paint(n))
     }
