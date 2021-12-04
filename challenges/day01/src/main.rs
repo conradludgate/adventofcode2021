@@ -18,8 +18,7 @@ impl Challenge for Day01 {
     }
 
     fn part_two(&self) -> usize {
-        let window_sum = self.0.array_windows().map(|[a, b, c]| a + b + c).collect::<Vec<_>>();
-        window_sum.array_windows().filter(|[a, b]| b > a).count()
+        self.0.array_windows().filter(|[a, _, _, d]| d > a).count()
     }
 }
 

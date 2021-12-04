@@ -5,7 +5,7 @@ use nom::{error::FromExternalError, IResult, Parser};
 pub use self::{
     map_res::MapRes,
     separated_array::SeperatedArray,
-    separated_list::SeperatedList1,
+    separated_list::{SeperatedList0, SeperatedList1},
     skip::{PrecededBy, Skip},
 };
 
@@ -31,6 +31,18 @@ pub trait ParserExt<I, O, E>: Parser<I, O, E> {
         Self: Sized,
     {
         MapRes {
+            f: self,
+            g,
+            _output: PhantomData,
+        }
+    }
+
+    fn separated_list0<G, O2>(self, g: G) -> SeperatedList0<Self, G, O2>
+    where
+        G: Parser<I, O2, E>,
+        Self: Sized,
+    {
+        SeperatedList0 {
             f: self,
             g,
             _output: PhantomData,

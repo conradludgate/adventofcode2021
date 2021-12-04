@@ -29,23 +29,23 @@ impl Challenge for Day02 {
     }
 
     fn part_one(&self) -> usize {
-        let (x, y) = self.0.iter().fold((0, 0), |(x, y), d| match d {
-            Dir::Forward(d) => (x + d, y),
-            Dir::Down(d) => (x, y + d),
-            Dir::Up(d) => (x, y - d),
+        let (h, d) = self.0.iter().fold((0, 0), |(h, d), x| match x {
+            Dir::Forward(x) => (h + x, d),
+            Dir::Down(x) => (h, d + x),
+            Dir::Up(x) => (h, d - x),
         });
 
-        (x * y) as usize
+        (h * d) as usize
     }
 
     fn part_two(&self) -> usize {
-        let (x, y, _) = self.0.iter().fold((0, 0, 0), |(x, y, a), d| match d {
-            Dir::Forward(d) => (x + d, y + a * d, a),
-            Dir::Down(d) => (x, y, a + d),
-            Dir::Up(d) => (x, y, a - d),
+        let (h, d, _) = self.0.iter().fold((0, 0, 0), |(h, d, a), x| match x {
+            Dir::Forward(x) => (h + x, d + a * x, a),
+            Dir::Down(x) => (h, d, a + x),
+            Dir::Up(x) => (h, d, a - x),
         });
 
-        (x * y) as usize
+        (h * d) as usize
     }
 }
 
