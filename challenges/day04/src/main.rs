@@ -1,3 +1,4 @@
+#![feature(drain_filter)]
 use std::{fmt::Debug, iter::Sum, str::FromStr};
 
 use ansi_term::Style;
@@ -37,19 +38,13 @@ impl Debug for Cell {
 
 impl Debug for Row {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for i in self.0 {
-            write!(f, "{:?} ", i)?;
-        }
-        Ok(())
+        self.0.iter().try_for_each(|cell| write!(f, "{:?} ", cell))
     }
 }
 
 impl Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for i in self.0 {
-            write!(f, "\n{:?}", i)?;
-        }
-        Ok(())
+        self.0.iter().try_for_each(|row| write!(f, "\n{:?}", row))
     }
 }
 
@@ -132,23 +127,17 @@ impl Challenge for Day04 {
 
     fn part_two(&self) -> usize {
         let mut boards = self.boards.clone();
-        for n in &self.numbers {
-            let mut i = 0;
-            let mut len = boards.len();
-            while i < len {
-                let board = &mut boards[i];
-                if board.is_bingo(*n) {
-                    if len == 1 {
-                        return board.count_unmarked() * n;
-                    }
-                    boards.remove(i);
-                    len -= 1;
-                } else {
-                    i += 1;
-                }
-            }
-        }
-        todo!()
+        self.numbers
+            .iter()
+            .find_map(|n| {
+                let completed = boards.drain_filter(|board| board.is_bingo(*n)).last();
+                boards
+                    .is_empty()
+                    .then(|| completed)
+                    .flatten()
+                    .map(|board| board.count_unmarked() * n)
+            })
+            .unwrap()
     }
 }
 
