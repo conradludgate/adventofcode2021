@@ -1,5 +1,5 @@
 use aoc::Challenge;
-use nom::{IResult, Parser, bytes::complete::tag};
+use nom::{bytes::complete::tag, IResult, Parser};
 
 struct Day00(String);
 

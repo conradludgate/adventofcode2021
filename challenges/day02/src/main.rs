@@ -1,6 +1,6 @@
 use aoc::Challenge;
-use nom::{IResult, branch::alt, combinator::map, sequence::tuple, bytes::complete::tag, Parser};
-use parsers::{number, lines};
+use nom::{branch::alt, bytes::complete::tag, combinator::map, sequence::tuple, IResult, Parser};
+use parsers::{lines, number};
 
 #[derive(PartialEq, Debug)]
 enum Dir {
@@ -29,24 +29,20 @@ impl Challenge for Day02 {
     }
 
     fn part_one(&self) -> usize {
-        let (x, y) = self.0.iter().fold((0, 0), |(x, y), d| {
-            match d {
-                Dir::Forward(d) => (x + d, y),
-                Dir::Down(d) => (x, y + d),
-                Dir::Up(d) => (x, y - d),
-            }
+        let (x, y) = self.0.iter().fold((0, 0), |(x, y), d| match d {
+            Dir::Forward(d) => (x + d, y),
+            Dir::Down(d) => (x, y + d),
+            Dir::Up(d) => (x, y - d),
         });
 
         (x * y) as usize
     }
 
     fn part_two(&self) -> usize {
-        let (x, y, _) = self.0.iter().fold((0, 0, 0), |(x, y, a), d| {
-            match d {
-                Dir::Forward(d) => (x + d, y + a * d, a),
-                Dir::Down(d) => (x, y, a + d),
-                Dir::Up(d) => (x, y, a - d),
-            }
+        let (x, y, _) = self.0.iter().fold((0, 0, 0), |(x, y, a), d| match d {
+            Dir::Forward(d) => (x + d, y + a * d, a),
+            Dir::Down(d) => (x, y, a + d),
+            Dir::Up(d) => (x, y, a - d),
         });
 
         (x * y) as usize
@@ -75,14 +71,17 @@ forward 2
     fn parse() {
         let output = Day02::new(INPUT).unwrap().1;
 
-        assert_eq!(output.0, vec![
-            Dir::Forward(5),
-            Dir::Down(5),
-            Dir::Forward(8),
-            Dir::Up(3),
-            Dir::Down(8),
-            Dir::Forward(2),
-        ]);
+        assert_eq!(
+            output.0,
+            vec![
+                Dir::Forward(5),
+                Dir::Down(5),
+                Dir::Forward(8),
+                Dir::Up(3),
+                Dir::Down(8),
+                Dir::Forward(2),
+            ]
+        );
     }
 
     #[test]

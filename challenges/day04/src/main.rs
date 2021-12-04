@@ -5,7 +5,6 @@ use ansi_term::Style;
 use aoc::Challenge;
 use nom::{
     bytes::complete::{tag, take},
-    sequence::separated_pair,
     IResult, Parser,
 };
 use parsers::{number, ParserExt};

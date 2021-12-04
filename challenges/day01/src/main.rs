@@ -18,7 +18,11 @@ impl Challenge for Day01 {
     }
 
     fn part_two(&self) -> usize {
-        let window_sum = self.0.array_windows().map(|[a, b, c]| a + b + c).collect::<Vec<_>>();
+        let window_sum = self
+            .0
+            .array_windows()
+            .map(|[a, b, c]| a + b + c)
+            .collect::<Vec<_>>();
         window_sum.array_windows().filter(|[a, b]| b > a).count()
     }
 }
@@ -35,36 +39,14 @@ mod tests {
 
     #[test]
     fn part_one() {
-        let challenge = Day01(vec![
-            199,
-            200,
-            208,
-            210,
-            200,
-            207,
-            240,
-            269,
-            260,
-            263,
-        ]);
+        let challenge = Day01(vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263]);
 
         assert_eq!(challenge.part_one(), 7)
     }
 
     #[test]
     fn part_two() {
-        let challenge = Day01(vec![
-            199,
-            200,
-            208,
-            210,
-            200,
-            207,
-            240,
-            269,
-            260,
-            263,
-        ]);
+        let challenge = Day01(vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263]);
 
         assert_eq!(challenge.part_two(), 5)
     }

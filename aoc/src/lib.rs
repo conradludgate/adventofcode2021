@@ -42,7 +42,11 @@ pub trait Challenge: Sized {
             println!("\tAnswer to part one: {}", p1);
             client
                 .post(&url)
-                .form(&[("level", 1), ("answer", p1)].into_iter().collect::<HashMap<_, _>>())
+                .form(
+                    &[("level", 1), ("answer", p1)]
+                        .into_iter()
+                        .collect::<HashMap<_, _>>(),
+                )
                 .send()
                 .unwrap();
         } else {
@@ -50,7 +54,11 @@ pub trait Challenge: Sized {
             println!("\tAnswer to part two: {}\n", p2);
             client
                 .post(&url)
-                .form(&[("level", 2), ("answer", p2)].into_iter().collect::<HashMap<_, _>>())
+                .form(
+                    &[("level", 2), ("answer", p2)]
+                        .into_iter()
+                        .collect::<HashMap<_, _>>(),
+                )
                 .send()
                 .unwrap();
         }
