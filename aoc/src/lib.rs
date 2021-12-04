@@ -7,7 +7,7 @@ const YEAR: usize = 2021;
 pub trait Challenge: Sized {
     const NAME: &'static str;
 
-    fn new(input: String) -> Self;
+    fn new(input: &str) -> nom::IResult<&str, Self>;
 
     fn part_one(&self) -> usize;
     fn part_two(&self) -> usize;
@@ -18,7 +18,7 @@ pub trait Challenge: Sized {
         let file = Path::new("challenges").join(Self::NAME).join("input.txt");
         let input = std::fs::read_to_string(file).expect("could not read file");
 
-        let challenge = Self::new(input);
+        let challenge = Self::new(&input).unwrap().1;
 
         let session = dotenv::var("AOC_SESSION").unwrap();
         let mut headers = header::HeaderMap::new();
