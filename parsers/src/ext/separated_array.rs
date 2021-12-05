@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use generic_vec::ArrayVec;
 use nom::{error::ParseError, InputLength, Parser};
+
 pub struct SeperatedArray<F, G, O2, const N: usize> {
     pub(crate) f: F,
     pub(crate) g: G,

@@ -20,9 +20,8 @@ impl Challenge for Day05 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn new(input: &str) -> IResult<&str, Self> {
-        let coords1 = number.skip(tag(",")).and(number).map(|(x, y)| Coords { x, y });
-        let coords2 = number.skip(tag(",")).and(number).map(|(x, y)| Coords { x, y });
-        let line = coords1.skip(tag(" -> ")).and(coords2);
+        let coords = number.skip(tag(",")).and(number).map(|(x, y)| Coords { x, y });
+        let line = coords.separated_array(tag(" -> ")).map(|[a, b]| (a, b));
         line.separated_list1(line_ending).map(Self).parse(input)
     }
 
