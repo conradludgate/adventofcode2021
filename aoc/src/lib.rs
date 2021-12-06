@@ -9,8 +9,8 @@ pub trait Challenge: Sized {
 
     fn new(input: &str) -> nom::IResult<&str, Self>;
 
-    fn part_one(&self) -> usize;
-    fn part_two(&self) -> usize;
+    fn part_one(self) -> usize;
+    fn part_two(self) -> usize;
 
     fn run() {
         println!("\nRunning challenge {}", Self::NAME);

@@ -81,26 +81,26 @@ impl Challenge for Day04 {
             .parse(input)
     }
 
-    fn part_one(&self) -> usize {
-        let mut boards = self.boards.clone();
+    fn part_one(self) -> usize {
+        let mut boards = self.boards;
         self.numbers
-            .iter()
+            .into_iter()
             .find_map(|n| {
                 // find the first winner
                 boards
                     .iter_mut()
-                    .find_map(|b| b.is_bingo(*n).then(|| b.count_unmarked() * n))
+                    .find_map(|b| b.is_bingo(n).then(|| b.count_unmarked() * n))
             })
             .unwrap()
     }
 
-    fn part_two(&self) -> usize {
-        let mut boards = self.boards.clone();
+    fn part_two(self) -> usize {
+        let mut boards = self.boards;
         self.numbers
-            .iter()
+            .into_iter()
             .find_map(|n| {
                 // find the last winner
-                let completed = boards.drain_filter(|board| board.is_bingo(*n)).last();
+                let completed = boards.drain_filter(|board| board.is_bingo(n)).last();
                 boards
                     .is_empty()
                     .then(|| completed)

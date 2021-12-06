@@ -13,11 +13,11 @@ impl Challenge for Day01 {
         number.separated_list1(line_ending).map(Day01).parse(input)
     }
 
-    fn part_one(&self) -> usize {
+    fn part_one(self) -> usize {
         self.0.array_windows().filter(|[a, b]| b > a).count()
     }
 
-    fn part_two(&self) -> usize {
+    fn part_two(self) -> usize {
         self.0.array_windows().filter(|[a, _, _, d]| d > a).count()
     }
 }

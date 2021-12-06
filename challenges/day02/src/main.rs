@@ -28,8 +28,8 @@ impl Challenge for Day02 {
         lines(Dir::parse).map(Day02).parse(input)
     }
 
-    fn part_one(&self) -> usize {
-        let (h, d) = self.0.iter().fold((0, 0), |(h, d), x| match x {
+    fn part_one(self) -> usize {
+        let (h, d) = self.0.into_iter().fold((0, 0), |(h, d), x| match x {
             Dir::Forward(x) => (h + x, d),
             Dir::Down(x) => (h, d + x),
             Dir::Up(x) => (h, d - x),
@@ -38,8 +38,8 @@ impl Challenge for Day02 {
         (h * d) as usize
     }
 
-    fn part_two(&self) -> usize {
-        let (h, d, _) = self.0.iter().fold((0, 0, 0), |(h, d, a), x| match x {
+    fn part_two(self) -> usize {
+        let (h, d, _) = self.0.into_iter().fold((0, 0, 0), |(h, d, a), x| match x {
             Dir::Forward(x) => (h + x, d + a * x, a),
             Dir::Down(x) => (h, d, a + x),
             Dir::Up(x) => (h, d, a - x),

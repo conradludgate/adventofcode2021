@@ -18,7 +18,7 @@ impl Challenge for Day03 {
         lines(binary).map(|data| Self { bit_len: n.len(), data }).parse(input)
     }
 
-    fn part_one(&self) -> usize {
+    fn part_one(self) -> usize {
         let n = self.bit_len;
 
         let counts = self.data.iter().fold(vec![0; n], |mut counts, d| {
@@ -49,7 +49,7 @@ impl Challenge for Day03 {
         gamma * epsilon
     }
 
-    fn part_two(&self) -> usize {
+    fn part_two(self) -> usize {
         let n = self.bit_len;
 
         let mut oxy = self.data.clone();
@@ -68,7 +68,7 @@ impl Challenge for Day03 {
             }
         }
 
-        let mut co2 = self.data.clone();
+        let mut co2 = self.data;
         let mut bit = 1 << n;
         while bit > 1 {
             bit >>= 1;

@@ -25,12 +25,12 @@ impl Challenge for Day05 {
         line.separated_list1(line_ending).map(Self).parse(input)
     }
 
-    fn part_one(&self) -> usize {
-        count_intersections(self.0.iter().copied().filter(|(p1, p2)| p1.x == p2.x || p1.y == p2.y))
+    fn part_one(self) -> usize {
+        count_intersections(self.0.into_iter().filter(|(p1, p2)| p1.x == p2.x || p1.y == p2.y))
     }
 
-    fn part_two(&self) -> usize {
-        count_intersections(self.0.iter().copied())
+    fn part_two(self) -> usize {
+        count_intersections(self.0.into_iter())
     }
 }
 
