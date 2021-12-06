@@ -1,13 +1,11 @@
-use std::{
-    collections::HashMap,
-    ops::{Add, Sub},
-};
+use std::collections::HashMap;
 
 use aoc::Challenge;
+use derive_more::{Add, Sub};
 use nom::{bytes::complete::tag, character::complete::line_ending, IResult, Parser};
 use parsers::{number, ParserExt};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Add, Sub)]
 struct Coords {
     x: isize,
     y: isize,
@@ -57,27 +55,6 @@ fn count_intersections(iter: impl Iterator<Item = (Coords, Coords)>) -> usize {
     });
 
     sparse.into_iter().filter(|(_, count)| *count > 1).count()
-}
-
-impl Add for Coords {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
-}
-impl Sub for Coords {
-    type Output = Self;
-
-    fn sub(self, r: Self) -> Self {
-        Self {
-            x: self.x - r.x,
-            y: self.y - r.y,
-        }
-    }
 }
 
 fn main() {
