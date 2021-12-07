@@ -19,10 +19,8 @@ impl Challenge for Day07 {
         let low = self.0[0];
         let high = self.0[self.0.len() - 1];
 
-        (low..=high)
-            .map(|pos| self.0.iter().map(|p| p.abs_diff(pos)).sum())
-            .min_by_key(|f| *f)
-            .unwrap()
+        let f = |pos| self.0.iter().map(|p| p.abs_diff(pos)).sum();
+        (low..=high).map(f).min().unwrap()
     }
 
     fn part_two(mut self) -> usize {
@@ -30,10 +28,8 @@ impl Challenge for Day07 {
         let low = self.0[0];
         let high = self.0[self.0.len() - 1];
 
-        (low..=high)
-            .map(|pos| self.0.iter().map(|p| p.abs_diff(pos)).map(|n| n * (n + 1) / 2).sum())
-            .min_by_key(|f| *f)
-            .unwrap()
+        let f = |pos| self.0.iter().map(|p| p.abs_diff(pos)).map(|n| n * (n + 1) / 2).sum();
+        (low..=high).map(f).min().unwrap()
     }
 }
 
