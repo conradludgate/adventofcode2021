@@ -64,6 +64,7 @@ where
 /// Builds a pattern that can match tuple lists
 ///
 /// ```
+/// use parsers::cons;
 /// let cons![a, b, c] = ((false, 1), Some(2));
 /// assert!(!a);
 /// assert_eq!(b, 1);

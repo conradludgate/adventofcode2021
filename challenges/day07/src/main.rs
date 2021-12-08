@@ -15,18 +15,17 @@ impl Challenge for Day07 {
     }
 
     fn part_one(mut self) -> usize {
+        // median
         self.0.sort_unstable();
-        let low = self.0[0];
-        let high = self.0[self.0.len() - 1];
-
-        let f = |pos| self.0.iter().map(|p| p.abs_diff(pos)).sum();
-        (low..=high).map(f).min().unwrap()
+        let pos = self.0[self.0.len() / 2];
+        self.0.into_iter().map(|p| p.abs_diff(pos)).sum()
     }
 
-    fn part_two(mut self) -> usize {
-        self.0.sort_unstable();
-        let low = self.0[0];
-        let high = self.0[self.0.len() - 1];
+    fn part_two(self) -> usize {
+        // mean
+        let s = self.0.iter().sum::<usize>();
+        let low = s / self.0.len();
+        let high = (s+1) / self.0.len();
 
         let f = |pos| self.0.iter().map(|p| p.abs_diff(pos)).map(|n| n * (n + 1) / 2).sum();
         (low..=high).map(f).min().unwrap()
