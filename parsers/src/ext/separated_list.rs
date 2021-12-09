@@ -100,3 +100,34 @@ where
         }
     }
 }
+
+pub struct Many1<F> {
+    pub(crate) f: F,
+}
+
+impl<I, F, O, E> Parser<I, Vec<O>, E> for Many1<F>
+where
+    I: Clone + InputLength,
+    F: Parser<I, O, E>,
+    E: ParseError<I>,
+{
+    fn parse(&mut self, mut input: I) -> nom::IResult<I, Vec<O>, E> {
+        let mut res = Vec::new();
+
+        // Parse the first element
+        let (i1, n) = self.f.parse(input)?;
+        res.push(n);
+        input = i1;
+
+        loop {
+            match self.f.parse(input.clone()) {
+                Err(Err::Error(_)) => return Ok((input, res)),
+                Err(e) => return Err(e),
+                Ok((i1, o)) => {
+                    res.push(o);
+                    input = i1;
+                }
+            }
+        }
+    }
+}

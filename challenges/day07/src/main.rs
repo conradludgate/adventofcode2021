@@ -25,7 +25,7 @@ impl Challenge for Day07 {
         // mean
         let s = self.0.iter().sum::<usize>();
         let low = s / self.0.len();
-        let high = (s+1) / self.0.len();
+        let high = (s + 1) / self.0.len();
 
         let f = |pos| self.0.iter().map(|p| p.abs_diff(pos)).map(|n| n * (n + 1) / 2).sum();
         (low..=high).map(f).min().unwrap()
