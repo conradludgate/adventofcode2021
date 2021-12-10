@@ -54,19 +54,18 @@ fn parse_chunk(mut input: &str) -> IResult<&str, Option<Delim>> {
             parse_open.map(State::Open).map(Some),
             parse_close.map(State::Close).map(Some),
         ))(input)?;
-        input = i;
         match state {
             None => return Ok((input, None)),
             Some(State::Open(open)) => stack.push(open),
             Some(State::Close(close)) => {
                 let open = stack.pop().unwrap();
                 if open != close {
-                    let (input, _) = take_until("\n")(input)?;
-                    let (input, _) = line_ending(input)?;
+                    let (input, _) = take_until("\n")(i)?;
                     return Ok((input, Some(close)));
                 }
             }
         }
+        input = i;
     }
 }
 
@@ -77,7 +76,7 @@ impl Challenge for Day10 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn new(input: &str) -> IResult<&str, Self> {
-        parse_chunk.many1().map(Day10).parse(input)
+        parse_chunk.separated_list1(line_ending).map(Day10).parse(input)
     }
 
     fn part_one(self) -> usize {
