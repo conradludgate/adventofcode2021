@@ -1,13 +1,32 @@
 use aoc::Challenge;
-use nom::{branch::alt, bytes::complete::tag, character::complete::line_ending, IResult, Parser};
+use nom::{branch::alt, character::complete::line_ending, IResult, Parser};
 use parsers::ParserExt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum Delim {
     Paren, // ()
     Brace, // {}
     Brack, // []
     Angle, // <>
+}
+
+impl Delim {
+    fn open(self) -> char {
+        match self {
+            Delim::Paren => '(',
+            Delim::Brace => '{',
+            Delim::Brack => '[',
+            Delim::Angle => '<',
+        }
+    }
+    fn close(self) -> char {
+        match self {
+            Delim::Paren => ')',
+            Delim::Brace => '}',
+            Delim::Brack => ']',
+            Delim::Angle => '>',
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -17,20 +36,22 @@ enum State {
 }
 
 fn parse_open(input: &str) -> IResult<&str, Delim> {
+    use nom::character::complete::char;
     alt((
-        tag("(").map(|_| Delim::Paren),
-        tag("{").map(|_| Delim::Brace),
-        tag("[").map(|_| Delim::Brack),
-        tag("<").map(|_| Delim::Angle),
+        char(Delim::Paren.open()).map(|_| Delim::Paren),
+        char(Delim::Brace.open()).map(|_| Delim::Brace),
+        char(Delim::Brack.open()).map(|_| Delim::Brack),
+        char(Delim::Angle.open()).map(|_| Delim::Angle),
     ))(input)
 }
 
 fn parse_close(input: &str) -> IResult<&str, Delim> {
+    use nom::character::complete::char;
     alt((
-        tag(")").map(|_| Delim::Paren),
-        tag("}").map(|_| Delim::Brace),
-        tag("]").map(|_| Delim::Brack),
-        tag(">").map(|_| Delim::Angle),
+        char(Delim::Paren.close()).map(|_| Delim::Paren),
+        char(Delim::Brace.close()).map(|_| Delim::Brace),
+        char(Delim::Brack.close()).map(|_| Delim::Brack),
+        char(Delim::Angle.close()).map(|_| Delim::Angle),
     ))(input)
 }
 
@@ -51,8 +72,7 @@ impl Chunk {
             match state {
                 State::Open(open) => stack.push(open),
                 State::Close(close) => {
-                    let open = stack.pop().unwrap();
-                    if open != close {
+                    if stack.pop() != Some(close) {
                         return match close {
                             Delim::Paren => 3,
                             Delim::Brace => 57,
