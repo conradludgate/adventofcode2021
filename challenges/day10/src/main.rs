@@ -10,7 +10,7 @@ enum Delim {
     Angle, // <>
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum State {
     Open(Delim),
     Close(Delim),
@@ -92,6 +92,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use crate::{parse_open, Delim, parse_close, parse_chunk};
+
     use super::Day10;
     use aoc::Challenge;
 
@@ -106,6 +108,79 @@ mod tests {
 <{([([[(<>()){}]>(<<{{
 <{([{{}}[<[[[<>{}]]]>[]]
 ";
+
+    #[test]
+    fn open() {
+        let (input, output) = parse_open("(EOF").unwrap();
+        assert_eq!(output, Delim::Paren);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_open("<EOF").unwrap();
+        assert_eq!(output, Delim::Angle);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_open("[EOF").unwrap();
+        assert_eq!(output, Delim::Brack);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_open("{EOF").unwrap();
+        assert_eq!(output, Delim::Brace);
+        assert_eq!(input, "EOF");
+    }
+
+    #[test]
+    fn close() {
+        let (input, output) = parse_close(")EOF").unwrap();
+        assert_eq!(output, Delim::Paren);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_close(">EOF").unwrap();
+        assert_eq!(output, Delim::Angle);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_close("]EOF").unwrap();
+        assert_eq!(output, Delim::Brack);
+        assert_eq!(input, "EOF");
+
+        let (input, output) = parse_close("}EOF").unwrap();
+        assert_eq!(output, Delim::Brace);
+        assert_eq!(input, "EOF");
+    }
+
+    #[test]
+    fn chunk() {
+        use super::State::*;
+        use super::Delim::*;
+
+        let (input, output) = parse_chunk("[({(<(())[]>[[{[]{<()<>>\n").unwrap();
+        assert_eq!(input, "\n");
+        assert_eq!(output.0, vec![
+            Open(Brack),
+            Open(Paren),
+            Open(Brace),
+            Open(Paren),
+            Open(Angle),
+            Open(Paren),
+            Open(Paren),
+            Close(Paren),
+            Close(Paren),
+            Open(Brack),
+            Close(Brack),
+            Close(Angle),
+            Open(Brack),
+            Open(Brack),
+            Open(Brace),
+            Open(Brack),
+            Close(Brack),
+            Open(Brace),
+            Open(Angle),
+            Open(Paren),
+            Close(Paren),
+            Open(Angle),
+            Close(Angle),
+            Close(Angle),
+        ]);
+    }
 
     #[test]
     fn parse() {
