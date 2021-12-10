@@ -85,6 +85,28 @@ impl Chunk {
         }
         0
     }
+    fn incomplete(self) -> usize {
+        let mut stack = vec![];
+        for state in self.0 {
+            match state {
+                State::Open(open) => stack.push(open),
+                State::Close(close) => {
+                    if stack.pop() != Some(close) {
+                        return 0
+                    }
+                }
+            }
+        }
+
+        stack.into_iter().rev().fold(0, |acc, x| {
+            acc * 5 + match x {
+                Delim::Paren => 1,
+                Delim::Brack => 2,
+                Delim::Brace => 3,
+                Delim::Angle => 4,
+            }
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -102,7 +124,9 @@ impl Challenge for Day10 {
     }
 
     fn part_two(self) -> usize {
-        todo!()
+        let mut scores = self.0.into_iter().map(Chunk::incomplete).filter(|&s| s > 0).collect::<Vec<_>>();
+        scores.sort_unstable();
+        scores[scores.len() / 2]
     }
 }
 
@@ -217,6 +241,6 @@ mod tests {
     #[test]
     fn part_two() {
         let output = Day10::new(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
+        assert_eq!(output.part_two(), 288957);
     }
 }
