@@ -88,22 +88,20 @@ const DIGITS: [u8; 10] = [
 fn eval_entry(e: Entry) -> usize {
     let mut poss = [0x7f; 7]; // Each output is currently possible for each signal
 
-    e.signals
-        .into_iter()
-        .for_each(|s| {
-            let d = match s.count_ones() {
-                2 => DIGITS[1],
-                3 => DIGITS[7],
-                4 => DIGITS[4],
-                7 => DIGITS[8],
-                _ => 0x7f,
-            };
-            (0..7).for_each(|b| {
-                if (s >> b) & 1 == 1 {
-                    poss[b] &= d
-                }
-            });
+    e.signals.into_iter().for_each(|s| {
+        let d = match s.count_ones() {
+            2 => DIGITS[1],
+            3 => DIGITS[7],
+            4 => DIGITS[4],
+            7 => DIGITS[8],
+            _ => 0x7f,
+        };
+        (0..7).for_each(|b| {
+            if (s >> b) & 1 == 1 {
+                poss[b] &= d
+            }
         });
+    });
 
     loop {
         let mut step = false;
@@ -135,17 +133,15 @@ fn eval_entry(e: Entry) -> usize {
 
     println!("{:?}", poss.iter().map(|s| format!("{:02x}", s)).collect::<Vec<_>>());
 
-    e.outputs
-        .into_iter()
-        .for_each(|s| {
-            let mut signal = 0;
-            (0..7).for_each(|b| {
-                if (s >> b) & 1 == 1 {
-                    signal &= poss[b];
-                }
-            });
-            println!("{:02x} {:02x}", s, signal);
+    e.outputs.into_iter().for_each(|s| {
+        let mut signal = 0;
+        (0..7).for_each(|b| {
+            if (s >> b) & 1 == 1 {
+                signal &= poss[b];
+            }
         });
+        println!("{:02x} {:02x}", s, signal);
+    });
 
     0
 }

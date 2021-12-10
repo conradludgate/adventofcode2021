@@ -75,10 +75,9 @@ impl Challenge for Day09 {
             .map(|(x, y)| count(&mut self.0, (x as isize, y as isize)))
             .collect::<Vec<_>>();
 
-        basins.sort_unstable();
         let n = basins.len();
-
-        basins[n - 3] * basins[n - 2] * basins[n - 1]
+        let (_, n3, n21) = basins.select_nth_unstable(n - 3);
+        *n3 * n21[0] * n21[1]
     }
 }
 

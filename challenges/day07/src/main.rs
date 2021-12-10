@@ -16,8 +16,8 @@ impl Challenge for Day07 {
 
     fn part_one(mut self) -> usize {
         // median
-        self.0.sort_unstable();
-        let pos = self.0[self.0.len() / 2];
+        let index = self.0.len() / 2;
+        let pos = *self.0.select_nth_unstable(index).1;
         self.0.into_iter().map(|p| p.abs_diff(pos)).sum()
     }
 
