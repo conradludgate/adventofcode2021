@@ -1,10 +1,5 @@
 use aoc::Challenge;
-use nom::{
-    branch::alt,
-    bytes::complete::take_until,
-    character::complete::{line_ending, one_of},
-    IResult, Parser,
-};
+use nom::{branch::alt, bytes::complete::tag, character::complete::line_ending, IResult, Parser};
 use parsers::ParserExt;
 
 #[derive(Debug, PartialEq)]
@@ -15,62 +10,65 @@ enum Delim {
     Angle, // <>
 }
 
+#[derive(Debug)]
 enum State {
     Open(Delim),
     Close(Delim),
 }
 
 fn parse_open(input: &str) -> IResult<&str, Delim> {
-    let (input, open) = one_of("({[<")(input)?;
-    let open = match open {
-        '(' => Delim::Paren,
-        '{' => Delim::Brace,
-        '[' => Delim::Brack,
-        '<' => Delim::Angle,
-        t => panic!("? {}", t),
-    };
-
-    Ok((input, open))
+    alt((
+        tag("(").map(|_| Delim::Paren),
+        tag("{").map(|_| Delim::Brace),
+        tag("[").map(|_| Delim::Brack),
+        tag("<").map(|_| Delim::Angle),
+    ))(input)
 }
 
 fn parse_close(input: &str) -> IResult<&str, Delim> {
-    let (input, close) = one_of(")}]>")(input)?;
-    let close = match close {
-        ')' => Delim::Paren,
-        '}' => Delim::Brace,
-        ']' => Delim::Brack,
-        '>' => Delim::Angle,
-        t => panic!("? {}", t),
-    };
-
-    Ok((input, close))
+    alt((
+        tag(")").map(|_| Delim::Paren),
+        tag("}").map(|_| Delim::Brace),
+        tag("]").map(|_| Delim::Brack),
+        tag(">").map(|_| Delim::Angle),
+    ))(input)
 }
 
-fn parse_chunk(mut input: &str) -> IResult<&str, Option<Delim>> {
-    let mut stack = vec![];
-    loop {
-        let (i, state) = alt((
-            line_ending.map(|_| None),
-            parse_open.map(State::Open).map(Some),
-            parse_close.map(State::Close).map(Some),
-        ))(input)?;
-        match state {
-            None => return Ok((input, None)),
-            Some(State::Open(open)) => stack.push(open),
-            Some(State::Close(close)) => {
-                let open = stack.pop().unwrap();
-                if open != close {
-                    let (input, _) = take_until("\n")(i)?;
-                    return Ok((input, Some(close)));
+fn parse_chunk(input: &str) -> IResult<&str, Chunk> {
+    alt((parse_open.map(State::Open), parse_close.map(State::Close)))
+        .many1()
+        .map(Chunk)
+        .parse(input)
+}
+
+#[derive(Debug)]
+struct Chunk(Vec<State>);
+
+impl Chunk {
+    fn corrupted(self) -> usize {
+        let mut stack = vec![];
+        for state in self.0 {
+            match state {
+                State::Open(open) => stack.push(open),
+                State::Close(close) => {
+                    let open = stack.pop().unwrap();
+                    if open != close {
+                        return match close {
+                            Delim::Paren => 3,
+                            Delim::Brace => 57,
+                            Delim::Brack => 1197,
+                            Delim::Angle => 25137,
+                        };
+                    }
                 }
             }
         }
-        input = i;
+        0
     }
 }
 
 #[derive(Debug)]
-struct Day10(Vec<Option<Delim>>);
+struct Day10(Vec<Chunk>);
 
 impl Challenge for Day10 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -80,16 +78,7 @@ impl Challenge for Day10 {
     }
 
     fn part_one(self) -> usize {
-        self.0
-            .into_iter()
-            .flatten()
-            .map(|x| match x {
-                Delim::Paren => 3,
-                Delim::Brace => 57,
-                Delim::Brack => 1197,
-                Delim::Angle => 25137,
-            })
-            .sum()
+        self.0.into_iter().map(Chunk::corrupted).sum()
     }
 
     fn part_two(self) -> usize {
