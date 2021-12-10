@@ -75,8 +75,8 @@ impl Chunk {
                     if stack.pop() != Some(close) {
                         return match close {
                             Delim::Paren => 3,
-                            Delim::Brace => 57,
-                            Delim::Brack => 1197,
+                            Delim::Brack => 57,
+                            Delim::Brace => 1197,
                             Delim::Angle => 25137,
                         };
                     }
