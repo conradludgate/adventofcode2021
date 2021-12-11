@@ -24,109 +24,78 @@ impl Challenge for Day11 {
         let mut grid = self.0;
         let mut flashes = 0;
         for _ in 0..100 {
-            grid.iter_mut().flat_map(|row| row.iter_mut()).for_each(|x| *x += 1);
-
-            loop {
-                let f = flashes;
-
-                for y in 0..10 {
-                    for x in 0..10 {
-                        if grid[y][x] > 9 && grid[y][x] < 128 {
-                            grid[y][x] = 128; // an octopus can only flash once
-                            flashes += 1;
-                            if x > 0 && y > 0 {
-                                grid[y - 1][x - 1] += 1;
-                            }
-                            if x > 0 {
-                                grid[y][x - 1] += 1;
-                            }
-                            if y > 0 {
-                                grid[y - 1][x] += 1;
-                            }
-                            if x < 9 && y < 9 {
-                                grid[y + 1][x + 1] += 1;
-                            }
-                            if x < 9 {
-                                grid[y][x + 1] += 1;
-                            }
-                            if y < 9 {
-                                grid[y + 1][x] += 1;
-                            }
-                            if x > 0 && y < 9 {
-                                grid[y + 1][x - 1] += 1;
-                            }
-                            if x < 9 && y > 0 {
-                                grid[y - 1][x + 1] += 1;
-                            }
-                        }
-                    }
-                }
-
-                if f == flashes {
-                    break;
-                }
-            }
-            grid.iter_mut().flat_map(|row| row.iter_mut()).filter(|x| **x > 9).for_each(|x| *x = 0);
+            flashes += flash_step(&mut grid);
         }
         flashes
     }
 
     fn part_two(self) -> usize {
         let mut grid = self.0;
-        let mut i = 0;
+        let mut i = 1;
         loop {
-            grid.iter_mut().flat_map(|row| row.iter_mut()).for_each(|x| *x += 1);
-
-            let mut flashes = 0;
-            loop {
-                let f = flashes;
-
-                for y in 0..10 {
-                    for x in 0..10 {
-                        if grid[y][x] > 9 && grid[y][x] < 128 {
-                            grid[y][x] = 128; // an octopus can only flash once
-                            flashes += 1;
-                            if x > 0 && y > 0 {
-                                grid[y - 1][x - 1] += 1;
-                            }
-                            if x > 0 {
-                                grid[y][x - 1] += 1;
-                            }
-                            if y > 0 {
-                                grid[y - 1][x] += 1;
-                            }
-                            if x < 9 && y < 9 {
-                                grid[y + 1][x + 1] += 1;
-                            }
-                            if x < 9 {
-                                grid[y][x + 1] += 1;
-                            }
-                            if y < 9 {
-                                grid[y + 1][x] += 1;
-                            }
-                            if x > 0 && y < 9 {
-                                grid[y + 1][x - 1] += 1;
-                            }
-                            if x < 9 && y > 0 {
-                                grid[y - 1][x + 1] += 1;
-                            }
-                        }
-                    }
-                }
-
-                if f == flashes {
-                    break;
-                }
+            if flash_step(&mut grid) == 100 {
+                return i;
             }
             i += 1;
 
-            if flashes == 100 {
-                return i;
-            }
-
-            grid.iter_mut().flat_map(|row| row.iter_mut()).filter(|x| **x > 9).for_each(|x| *x = 0);
         }
     }
+}
+
+fn flash_step(grid: &mut [Vec<u8>]) -> usize {
+    // keep track
+    let mut flashes = 0;
+
+    // increment all energy levels
+    grid.iter_mut().flat_map(|row| row.iter_mut()).for_each(|x| *x += 1);
+
+    loop {
+        let f = flashes;
+
+        for y in 0..10 {
+            for x in 0..10 {
+                if grid[y][x] > 9 && grid[y][x] < 128 {
+                    grid[y][x] = 128; // an octopus can only flash once
+                    flashes += 1;
+
+                    // update all valid neighbours
+                    if x > 0 && y > 0 {
+                        grid[y - 1][x - 1] += 1;
+                    }
+                    if x > 0 {
+                        grid[y][x - 1] += 1;
+                    }
+                    if y > 0 {
+                        grid[y - 1][x] += 1;
+                    }
+                    if x < 9 && y < 9 {
+                        grid[y + 1][x + 1] += 1;
+                    }
+                    if x < 9 {
+                        grid[y][x + 1] += 1;
+                    }
+                    if y < 9 {
+                        grid[y + 1][x] += 1;
+                    }
+                    if x > 0 && y < 9 {
+                        grid[y + 1][x - 1] += 1;
+                    }
+                    if x < 9 && y > 0 {
+                        grid[y - 1][x + 1] += 1;
+                    }
+                }
+            }
+        }
+
+        // if the number of flashes didn't change, let's exit
+        if f == flashes {
+            break;
+        }
+    }
+
+    grid.iter_mut().flat_map(|row| row.iter_mut()).filter(|x| **x > 9).for_each(|x| *x = 0);
+
+    flashes
 }
 
 fn main() {
