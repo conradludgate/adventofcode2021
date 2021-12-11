@@ -34,3 +34,26 @@ where
         Ok((input, res.into_array()))
     }
 }
+
+pub struct Array<F, const N: usize> {
+    pub(crate) f: F,
+}
+
+impl<I, F, O, E, const N: usize> Parser<I, [O; N], E> for Array<F, N>
+where
+    I: Clone + InputLength,
+    F: Parser<I, O, E>,
+    E: ParseError<I>,
+{
+    fn parse(&mut self, mut input: I) -> nom::IResult<I, [O; N], E> {
+        let mut res = ArrayVec::new();
+
+        for _ in 0..N {
+            let (i1, n) = self.f.parse(input)?;
+            res.push(n);
+            input = i1;
+        }
+
+        Ok((input, res.into_array()))
+    }
+}

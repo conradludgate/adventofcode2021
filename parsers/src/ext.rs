@@ -2,13 +2,13 @@ use std::marker::PhantomData;
 
 use nom::{error::FromExternalError, IResult, Parser};
 
-use self::separated_list::Many1;
 pub use self::{
     map_res::MapRes,
     separated_array::SeperatedArray,
     separated_list::{SeperatedList0, SeperatedList1},
     skip::{PrecededBy, Skip},
 };
+use self::{separated_array::Array, separated_list::Many1};
 
 mod map_res;
 mod separated_array;
@@ -67,6 +67,13 @@ pub trait ParserExt<I, O, E>: Parser<I, O, E> {
         Self: Sized,
     {
         Many1 { f: self }
+    }
+
+    fn array<const N: usize>(self) -> Array<Self, N>
+    where
+        Self: Sized,
+    {
+        Array { f: self }
     }
 
     fn separated_array<G, O2, const N: usize>(self, g: G) -> SeperatedArray<Self, G, O2, N>

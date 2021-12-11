@@ -6,7 +6,7 @@ use nom::{
 use parsers::ParserExt;
 
 #[derive(Debug, PartialEq)]
-struct Day11(Vec<Vec<u8>>);
+struct Day11([[u8; 10]; 10]);
 
 impl Challenge for Day11 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -14,8 +14,8 @@ impl Challenge for Day11 {
     fn new(input: &str) -> IResult<&str, Self> {
         one_of("0123456789")
             .map(|c| (c as u8) - b'0')
-            .many1()
-            .separated_list1(line_ending)
+            .array()
+            .separated_array(line_ending)
             .map(Day11)
             .parse(input)
     }
@@ -33,16 +33,16 @@ impl Challenge for Day11 {
         let mut grid = self.0;
         let mut i = 1;
         loop {
+            // all 10x10 octopus flash
             if flash_step(&mut grid) == 100 {
                 return i;
             }
             i += 1;
-
         }
     }
 }
 
-fn flash_step(grid: &mut [Vec<u8>]) -> usize {
+fn flash_step(grid: &mut [[u8; 10]; 10]) -> usize {
     // keep track
     let mut flashes = 0;
 
@@ -59,23 +59,24 @@ fn flash_step(grid: &mut [Vec<u8>]) -> usize {
                     flashes += 1;
 
                     // update all valid neighbours
-                    if x > 0 && y > 0 {
-                        grid[y - 1][x - 1] += 1;
-                    }
+                    // branch predictor sadness
                     if x > 0 {
                         grid[y][x - 1] += 1;
-                    }
-                    if y > 0 {
-                        grid[y - 1][x] += 1;
-                    }
-                    if x < 9 && y < 9 {
-                        grid[y + 1][x + 1] += 1;
                     }
                     if x < 9 {
                         grid[y][x + 1] += 1;
                     }
+                    if y > 0 {
+                        grid[y - 1][x] += 1;
+                    }
                     if y < 9 {
                         grid[y + 1][x] += 1;
+                    }
+                    if x > 0 && y > 0 {
+                        grid[y - 1][x - 1] += 1;
+                    }
+                    if x < 9 && y < 9 {
+                        grid[y + 1][x + 1] += 1;
                     }
                     if x > 0 && y < 9 {
                         grid[y + 1][x - 1] += 1;
@@ -93,7 +94,10 @@ fn flash_step(grid: &mut [Vec<u8>]) -> usize {
         }
     }
 
-    grid.iter_mut().flat_map(|row| row.iter_mut()).filter(|x| **x > 9).for_each(|x| *x = 0);
+    grid.iter_mut()
+        .flat_map(|row| row.iter_mut())
+        .filter(|x| **x > 9)
+        .for_each(|x| *x = 0);
 
     flashes
 }
