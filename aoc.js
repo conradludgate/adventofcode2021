@@ -15,9 +15,10 @@ async function setup() {
     console.log("=== SETUP ===");
 
     // create rust project
-    await fs.cp("challenges/day00", outdir, {
+    await fs.cp("day00", outdir, {
         recursive: true,
     });
+    await fs.unlink(`${outdir}/input.txt`);
 
     await replace({
         files: `${outdir}/**/*`,

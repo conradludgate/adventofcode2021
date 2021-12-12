@@ -1,5 +1,5 @@
 use aoc::{Challenge, Parser};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use day01::Day01;
 
 pub fn day01(c: &mut Criterion) {
@@ -9,8 +9,14 @@ pub fn day01(c: &mut Criterion) {
     let challenge = Day01::parse(input).unwrap().1;
 
     group.bench_function("parse", |b| b.iter(|| Day01::parse(black_box(input))));
-    group.bench_function("part1", |b| b.iter(|| black_box(challenge.clone()).part_one()));
-    group.bench_function("part2", |b| b.iter(|| black_box(challenge.clone()).part_two()));
+    group.bench_function("part1", |b| {
+        b.iter_batched(|| challenge.clone(), Challenge::part_one, BatchSize::SmallInput)
+    });
+    group.bench_function("part2", |b| {
+        b.iter_batched(|| challenge.clone(), Challenge::part_two, BatchSize::SmallInput)
+    });
+
+    group.finish();
 }
 
 criterion_group!(benches, day01);

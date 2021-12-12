@@ -12,7 +12,7 @@ aoc = { path = "../../aoc" }
 derive_more = "0.99"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = { version = "0.3", features = ["html_reports"] }
 
 [[bench]]
 name = "benches"

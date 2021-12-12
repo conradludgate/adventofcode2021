@@ -49,7 +49,6 @@ impl Challenge for Day08 {
                     .into_iter()
                     .filter(|output| matches!(output.count_ones(), 2 | 4 | 3 | 7))
             })
-            // .map(|s| dbg!(s))
             .count()
     }
 
@@ -109,7 +108,6 @@ fn eval_entry(e: Entry) -> usize {
         let mut step = false;
         for i in 0..7 {
             let x = poss[i];
-            dbg!(x.count_ones());
             if x.count_ones() == 1 {
                 for (k, p) in poss.iter_mut().enumerate() {
                     if k != i && *p & x != 0 {
@@ -133,8 +131,6 @@ fn eval_entry(e: Entry) -> usize {
         }
     }
 
-    println!("{:?}", poss.iter().map(|s| format!("{:02x}", s)).collect::<Vec<_>>());
-
     e.outputs.into_iter().for_each(|s| {
         let mut signal = 0;
         (0..7).for_each(|b| {
@@ -142,7 +138,6 @@ fn eval_entry(e: Entry) -> usize {
                 signal &= poss[b];
             }
         });
-        println!("{:02x} {:02x}", s, signal);
     });
 
     0
