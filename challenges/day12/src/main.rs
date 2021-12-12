@@ -23,9 +23,9 @@ impl Challenge for Day12 {
     }
 
     fn part_one(self) -> usize {
-        let mut outputs = vec![];
-        dfs(&self.0, vec![], &mut outputs);
-        outputs.len()
+        let mut outputs = 0;
+        dfs(&self.0, vec![], &mut outputs, false);
+        outputs
     }
 
     fn part_two(self) -> usize {
@@ -33,10 +33,10 @@ impl Challenge for Day12 {
     }
 }
 
-fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut Vec<Vec<&'a str>> ) {
+fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut usize, part2: bool) {
     let last = path.last().map_or("start", |&x| x);
     if last == "end" {
-        outputs.push(path);
+        *outputs += 1;
         return;
     }
 
@@ -62,7 +62,7 @@ fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut Vec<Vec
 
         let mut new = path.clone();
         new.push(to);
-        dfs(map, new, outputs);
+        dfs(map, new, outputs, part2);
     }
 }
 
