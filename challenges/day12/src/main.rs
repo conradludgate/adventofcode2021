@@ -29,7 +29,9 @@ impl Challenge for Day12 {
     }
 
     fn part_two(self) -> usize {
-        todo!()
+        let mut outputs = 0;
+        dfs(&self.0, vec![], &mut outputs, true);
+        outputs
     }
 }
 
@@ -57,6 +59,12 @@ fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut usize, 
         // is ascii lowercase.
         // If lowercase node was already in our path, skip
         if to.as_bytes()[0] >= b'a' && path.contains(&to.as_str()) {
+            if part2 {
+                // allowed to visit a single small cave just twice
+                let mut new = path.clone();
+                new.push(to);
+                dfs(map, new, outputs, false);
+            }
             continue
         }
 
@@ -99,6 +107,6 @@ b-end
     #[test]
     fn part_two() {
         let output = Day12::new(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
+        assert_eq!(output.part_two(), 36);
     }
 }
