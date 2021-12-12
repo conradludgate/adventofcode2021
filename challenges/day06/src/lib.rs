@@ -2,7 +2,7 @@ use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{bytes::complete::tag, IResult, Parser};
 use parsers::{number, ParserExt};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Day06(Vec<usize>);
 
 impl<'i> ChallengeParser<'i> for Day06 {

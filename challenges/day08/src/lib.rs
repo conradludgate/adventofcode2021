@@ -6,13 +6,13 @@ use nom::{
 };
 use parsers::ParserExt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Entry {
     signals: [u8; 10],
     outputs: [u8; 4],
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Day08(Vec<Entry>);
 
 impl<'i> ChallengeParser<'i> for Day08 {

@@ -5,7 +5,7 @@ use nom::{
 };
 use parsers::ParserExt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Day11([[u8; 10]; 10]);
 
 impl<'i> ChallengeParser<'i> for Day11 {

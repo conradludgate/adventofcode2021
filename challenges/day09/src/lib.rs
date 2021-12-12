@@ -4,7 +4,7 @@ use nom::{
     IResult, Parser,
 };
 use parsers::ParserExt;
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Day09(Vec<Vec<u32>>);
 
 impl<'i> ChallengeParser<'i> for Day09 {

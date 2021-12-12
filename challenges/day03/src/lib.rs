@@ -4,7 +4,7 @@ use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{combinator::recognize, IResult, Parser};
 use parsers::{binary, lines};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Day03 {
     pub bit_len: usize,
     pub data: Vec<usize>,

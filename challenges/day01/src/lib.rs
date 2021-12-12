@@ -4,6 +4,7 @@ use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{character::complete::line_ending, IResult, Parser};
 use parsers::{number, ParserExt};
 
+#[derive(Clone)]
 pub struct Day01(Vec<i32>);
 
 impl<'i> ChallengeParser<'i> for Day01 {

@@ -10,7 +10,7 @@ enum Delim {
     Angle, // <>
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum State {
     Open(Delim),
     Close(Delim),
@@ -43,7 +43,7 @@ fn parse_chunk(input: &str) -> IResult<&str, Chunk> {
         .parse(input)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Chunk(Vec<State>);
 
 impl Chunk {
@@ -91,7 +91,7 @@ impl Chunk {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Day10(Vec<Chunk>);
 
 impl<'i> ChallengeParser<'i> for Day10 {

@@ -10,3 +10,10 @@ nom = "7.1"
 parsers = { path = "../../parsers" }
 aoc = { path = "../../aoc" }
 derive_more = "0.99"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "benches"
+harness = false

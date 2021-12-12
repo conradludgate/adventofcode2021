@@ -2,7 +2,7 @@ use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{branch::alt, bytes::complete::tag, IResult, Parser};
 use parsers::*;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Dir {
     Forward(i32),
     Down(i32),
@@ -19,6 +19,7 @@ impl Dir {
     }
 }
 
+#[derive(Clone)]
 pub struct Day02(pub Vec<Dir>);
 
 impl<'i> ChallengeParser<'i> for Day02 {
