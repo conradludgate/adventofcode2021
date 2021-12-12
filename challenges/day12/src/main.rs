@@ -23,55 +23,49 @@ impl Challenge for Day12 {
     }
 
     fn part_one(self) -> usize {
-        let mut outputs = 0;
-        dfs(&self.0, vec![], &mut outputs, false);
-        outputs
+        dfs(&self.0, vec![], false)
     }
 
     fn part_two(self) -> usize {
-        let mut outputs = 0;
-        dfs(&self.0, vec![], &mut outputs, true);
-        outputs
+        dfs(&self.0, vec![], true)
     }
 }
 
-fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut usize, part2: bool) {
+fn dfs<'a>(map: &'a [(String, String)], path: Vec<&'a str>, part2: bool) -> usize {
     let last = path.last().map_or("start", |&x| x);
     if last == "end" {
-        *outputs += 1;
-        return;
+        return 1;
     }
 
-    for (a, b) in map {
-        let to = if a == last {
-            b
-        } else if b == last {
-            a
-        } else {
-            continue
-        };
+    map.iter()
+        .map(|(a, b)| {
+            let to = if a == last {
+                b
+            } else if b == last {
+                a
+            } else {
+                return 0;
+            };
 
-        // cannot revisit start
-        if to == "start" {
-            continue
-        }
-
-        // is ascii lowercase.
-        // If lowercase node was already in our path, skip
-        if to.as_bytes()[0] >= b'a' && path.contains(&to.as_str()) {
-            if part2 {
-                // allowed to visit a single small cave just twice
-                let mut new = path.clone();
-                new.push(to);
-                dfs(map, new, outputs, false);
+            // cannot revisit start
+            if to == "start" {
+                return 0;
             }
-            continue
-        }
 
-        let mut new = path.clone();
-        new.push(to);
-        dfs(map, new, outputs, part2);
-    }
+            let mut p2 = part2;
+
+            // is ascii lowercase.
+            // If lowercase node was already in our path, skip
+            // If part2 still applies, we can revisit a single small cave only once
+            if to.as_bytes()[0] >= b'a' && path.contains(&to.as_str()) && !std::mem::take(&mut p2) {
+                return 0;
+            }
+
+            let mut new = path.clone();
+            new.push(to);
+            dfs(map, new, p2)
+        })
+        .sum()
 }
 
 fn main() {
