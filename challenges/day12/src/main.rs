@@ -23,7 +23,9 @@ impl Challenge for Day12 {
     }
 
     fn part_one(self) -> usize {
-        todo!()
+        let mut outputs = vec![];
+        dfs(&self.0, vec![], &mut outputs);
+        outputs.len()
     }
 
     fn part_two(self) -> usize {
@@ -31,7 +33,38 @@ impl Challenge for Day12 {
     }
 }
 
+fn dfs<'a>(map: &'a[(String, String)], path: Vec<&'a str>, outputs: &mut Vec<Vec<&'a str>> ) {
+    let last = path.last().map_or("start", |&x| x);
+    if last == "end" {
+        outputs.push(path);
+        return;
+    }
 
+    for (a, b) in map {
+        let to = if a == last {
+            b
+        } else if b == last {
+            a
+        } else {
+            continue
+        };
+
+        // cannot revisit start
+        if to == "start" {
+            continue
+        }
+
+        // is ascii lowercase.
+        // If lowercase node was already in our path, skip
+        if to.as_bytes()[0] >= b'a' && path.contains(&to.as_str()) {
+            continue
+        }
+
+        let mut new = path.clone();
+        new.push(to);
+        dfs(map, new, outputs);
+    }
+}
 
 fn main() {
     Day12::run();
