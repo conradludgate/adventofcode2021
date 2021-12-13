@@ -31,12 +31,10 @@ impl<'i> Challenge for Day13 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
-        let Self { mut pairs, folds } = self;
-        let (axis, index) = folds.into_iter().next().unwrap();
+        let Self { pairs, folds } = self;
 
-        apply_fold(&mut pairs, axis, index);
-
-        pairs.len()
+        let fold = folds.into_iter().next().unwrap();
+        apply_fold(pairs, fold).len()
     }
 
     fn part_two(self) -> usize {
@@ -47,12 +45,25 @@ impl<'i> Challenge for Day13 {
     }
 }
 
+fn apply_fold(mut points: Vec<[usize; 2]>, (axis, index): (char, usize)) -> Vec<[usize; 2]> {
+    let i = ((axis as u8) - b'x') as usize;
+    points.iter_mut().for_each(|p| {
+        if p[i] > index {
+            p[i] = 2 * index - p[i]
+        }
+    });
+
+    points.sort_unstable();
+    points.dedup();
+    points
+}
+
 impl Day13 {
     pub fn part2(self) -> String {
-        let Self { mut pairs, folds } = self;
-        folds
+        let Self { pairs, folds } = self;
+        let pairs = folds
             .into_iter()
-            .for_each(|(axis, index)| apply_fold(&mut pairs, axis, index));
+            .fold(pairs, apply_fold);
 
         // 'OCR'
         // Each letter fits in a 4 * 6 dot grid (with a space between to make 5 * 6)
@@ -114,18 +125,6 @@ const LETTERS: [u32; 26] = [
     0b_0000_0000_0000_0000_0000_0000, // Y
     0b_0000_0000_0000_0000_0000_0000, // Z
 ];
-
-fn apply_fold(points: &mut Vec<[usize; 2]>, axis: char, index: usize) {
-    let i = ((axis as u8) - b'x') as usize;
-    points.iter_mut().for_each(|p| {
-        if p[i] > index {
-            p[i] = 2 * index - p[i]
-        }
-    });
-
-    points.sort_unstable();
-    points.dedup();
-}
 
 #[cfg(test)]
 mod tests {
