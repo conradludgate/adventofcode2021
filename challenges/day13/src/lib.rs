@@ -41,6 +41,8 @@ impl<'i> Challenge for Day13 {
 
     fn part_two(self) -> usize {
         let code = self.part2();
+        // my auto submitter doesn't support strings just yet
+        // so I'm just gonna panic the output to submit manually
         panic!("{}", code);
     }
 }
@@ -56,6 +58,9 @@ impl Day13 {
         // Each letter fits in a 4 * 6 dot grid (with a space between to make 5 * 6)
         // 4*6 = 24 which fits in a u32. set all the bits on for that number and you
         // can get it's corresponding letter from the hardcoded `LETTERS` list
+
+        // `pairs` are also sorted first by x, which means that all the first set of pairs will only be
+        // for the first letter, then the second, etc
 
         let mut string = vec![];
         let mut letter = 0;
@@ -111,19 +116,12 @@ const LETTERS: [u32; 26] = [
 ];
 
 fn apply_fold(points: &mut Vec<[usize; 2]>, axis: char, index: usize) {
-    if axis == 'x' {
-        points.iter_mut().for_each(|[x, _]| {
-            if *x > index {
-                *x = 2 * index - *x
-            }
-        })
-    } else if axis == 'y' {
-        points.iter_mut().for_each(|[_, y]| {
-            if *y > index {
-                *y = 2 * index - *y
-            }
-        })
-    }
+    let i = ((axis as u8) - b'x') as usize;
+    points.iter_mut().for_each(|p| {
+        if p[i] > index {
+            p[i] = 2 * index - p[i]
+        }
+    });
 
     points.sort_unstable();
     points.dedup();
