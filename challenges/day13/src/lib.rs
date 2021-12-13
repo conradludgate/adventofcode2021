@@ -40,28 +40,22 @@ impl<'i> Challenge for Day13 {
     }
 
     fn part_two(self) -> usize {
+        let code = self.part2();
+        panic!("{}", code);
+    }
+}
+
+impl Day13 {
+    fn part2(self) -> String {
         let Self { mut pairs, folds } = self;
         folds
             .into_iter()
             .for_each(|(axis, index)| apply_fold(&mut pairs, axis, index));
 
-        // let max_x = pairs.iter().max_by_key(|[x, _]| x).unwrap()[0];
-        // let max_y = pairs.iter().max_by_key(|[_, y]| y).unwrap()[1];
-
-        // let width = max_x + 2; // extra space for newline
-        // let height = max_y + 1;
-        // let mut grid = vec![b' '; width * height];
-
-        // for i in 0..height {
-        //     grid[i * width + max_x + 1] = b'\n';
-        // }
-
-        // pairs.into_iter().for_each(|[x, y]| {
-        //     grid[x + y * width] = b'#';
-        // });
-
-        // pairs are sorted by x first, then y
-        // so the front of `pairs` should be the dots for the first letter
+        // 'OCR'
+        // Each letter fits in a 4 * 6 dot grid (with a space between to make 5 * 6)
+        // 4*6 = 24 which fits in a u32. set all the bits on for that number and you
+        // can get it's corresponding letter from the hardcoded `LETTERS` list
 
         let mut string = vec![];
         let mut letter = 0;
@@ -74,15 +68,14 @@ impl<'i> Challenge for Day13 {
                 offset = x / 5;
             }
 
-            let index = (x % 5) + y * 5;
+            let index = (x % 5) + y * 4;
             letter |= 1 << index;
         }
+        println!("{:024b}", letter);
         let c = b'A' + LETTERS.iter().position(|&l| l == letter).unwrap() as u8;
         string.push(c);
 
-        println!("{}", String::from_utf8(string).unwrap());
-
-        panic!("");
+        String::from_utf8(string).unwrap()
     }
 }
 
@@ -90,32 +83,32 @@ impl<'i> Challenge for Day13 {
 // Index corresponds to letter in alphabet
 #[allow(clippy::unusual_byte_groupings)]
 const LETTERS: [u32; 26] = [
-    0b_01001_01001_01111_01001_01001_00110, // A
-    0b_00111_01001_01001_00111_01001_00111, // B
-    0b_00110_01001_00001_00001_01001_00110, // C
-    0b_00000_00000_00000_00000_00000_00000, // D
-    0b_01111_00001_00001_00111_00001_01111, // E
-    0b_00000_00000_00000_00000_00000_00000, // F
-    0b_01110_01001_01101_00001_01001_00110, // G
-    0b_01001_01001_01001_01111_01001_01001, // H
-    0b_00000_00000_00000_00000_00000_00000, // I
-    0b_00110_01001_01000_01000_01000_01100, // J
-    0b_00000_00000_00000_00000_00000_00000, // K
-    0b_00000_00000_00000_00000_00000_00000, // L
-    0b_00000_00000_00000_00000_00000_00000, // M
-    0b_00000_00000_00000_00000_00000_00000, // N
-    0b_00000_00000_00000_00000_00000_00000, // O
-    0b_00000_00000_00000_00000_00000_00000, // P
-    0b_00000_00000_00000_00000_00000_00000, // Q
-    0b_00000_00000_00000_00000_00000_00000, // R
-    0b_00000_00000_00000_00000_00000_00000, // S
-    0b_00000_00000_00000_00000_00000_00000, // T
-    0b_00000_00000_00000_00000_00000_00000, // U
-    0b_00000_00000_00000_00000_00000_00000, // V
-    0b_00000_00000_00000_00000_00000_00000, // W
-    0b_00000_00000_00000_00000_00000_00000, // X
-    0b_00000_00000_00000_00000_00000_00000, // Y
-    0b_00000_00000_00000_00000_00000_00000, // Z
+    0b_1001_1001_1111_1001_1001_0110, // A
+    0b_0111_1001_1001_0111_1001_0111, // B
+    0b_0110_1001_0001_0001_1001_0110, // C
+    0b_0000_0000_0000_0000_0000_0000, // D
+    0b_1111_0001_0001_0111_0001_1111, // E
+    0b_0000_0000_0000_0000_0000_0000, // F
+    0b_1110_1001_1101_0001_1001_0110, // G
+    0b_1001_1001_1001_1111_1001_1001, // H
+    0b_0000_0000_0000_0000_0000_0000, // I
+    0b_0110_1001_1000_1000_1000_1100, // J
+    0b_0000_0000_0000_0000_0000_0000, // K
+    0b_0000_0000_0000_0000_0000_0000, // L
+    0b_0000_0000_0000_0000_0000_0000, // M
+    0b_0000_0000_0000_0000_0000_0000, // N
+    0b_0000_0000_0000_0000_0000_0000, // O
+    0b_0000_0000_0000_0000_0000_0000, // P
+    0b_0000_0000_0000_0000_0000_0000, // Q
+    0b_0000_0000_0000_0000_0000_0000, // R
+    0b_0000_0000_0000_0000_0000_0000, // S
+    0b_0000_0000_0000_0000_0000_0000, // T
+    0b_0000_0000_0000_0000_0000_0000, // U
+    0b_0000_0000_0000_0000_0000_0000, // V
+    0b_0000_0000_0000_0000_0000_0000, // W
+    0b_0000_0000_0000_0000_0000_0000, // X
+    0b_0000_0000_0000_0000_0000_0000, // Y
+    0b_0000_0000_0000_0000_0000_0000, // Z
 ];
 
 fn apply_fold(points: &mut Vec<[usize; 2]>, axis: char, index: usize) {
@@ -175,11 +168,5 @@ fold along x=5
     fn part_one() {
         let output = Day13::parse(INPUT).unwrap().1;
         assert_eq!(output.part_one(), 17);
-    }
-
-    #[test]
-    fn part_two() {
-        let output = Day13::parse(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
     }
 }
