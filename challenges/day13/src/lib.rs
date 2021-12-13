@@ -46,7 +46,7 @@ impl<'i> Challenge for Day13 {
 }
 
 impl Day13 {
-    fn part2(self) -> String {
+    pub fn part2(self) -> String {
         let Self { mut pairs, folds } = self;
         folds
             .into_iter()
@@ -71,7 +71,6 @@ impl Day13 {
             let index = (x % 5) + y * 4;
             letter |= 1 << index;
         }
-        println!("{:024b}", letter);
         let c = b'A' + LETTERS.iter().position(|&l| l == letter).unwrap() as u8;
         string.push(c);
 

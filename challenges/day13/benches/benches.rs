@@ -13,7 +13,7 @@ pub fn day13(c: &mut Criterion) {
         b.iter_batched(|| challenge.clone(), Challenge::part_one, BatchSize::SmallInput)
     });
     group.bench_function("part2", |b| {
-        b.iter_batched(|| challenge.clone(), Challenge::part_two, BatchSize::SmallInput)
+        b.iter_batched(|| challenge.clone(), Day13::part2, BatchSize::SmallInput)
     });
 
     group.finish();
