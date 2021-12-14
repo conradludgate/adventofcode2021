@@ -1,4 +1,5 @@
 #![feature(array_from_fn)]
+#![feature(array_windows)]
 use std::{array, collections::BTreeMap};
 
 use aoc::{Challenge, Parser as ChallengeParser};
@@ -10,17 +11,17 @@ use nom::{
 use parsers::ParserExt;
 
 type Pair = [u8; 2];
-type Rules = Vec<(Pair, u8)>;
+type Rules = BTreeMap<Pair, u8>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Day14<'i> {
-    polymer: &'i str,
+    polymer: &'i [u8],
     rules: Rules,
 }
 
 impl<'i> ChallengeParser<'i> for Day14<'i> {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
-        let polymer = alpha1;
+        let polymer = alpha1.map(|s: &str| s.as_bytes());
         let pair = take(2_usize).map(|s: &str| array::from_fn(|i| s.as_bytes()[i]));
         let insert = take(1_usize).map(|s: &str| s.as_bytes()[0]);
         let rule = pair.skip(tag(" -> ")).and(insert);
@@ -49,31 +50,31 @@ impl<'i> Challenge for Day14<'i> {
 impl<'i> Day14<'i> {
     fn run(self, n: usize) -> usize {
         let mut pairs = BTreeMap::new();
-        let bytes = self.polymer.as_bytes();
-        for i in 0..(bytes.len() - 1) {
-            let pair = [bytes[i], bytes[i + 1]];
+        self.polymer.array_windows().for_each(|&pair| {
             *pairs.entry(pair).or_insert(0_usize) += 1;
-        }
+        });
 
-        let rules = BTreeMap::from_iter(self.rules);
         for _ in 0..n {
-            pairs = step(pairs, &rules);
+            pairs = step(pairs, &self.rules);
         }
 
         let mut counts = BTreeMap::<_, usize>::new();
+        // only count the second char of each pair to reduce duplicates
+        // ensure to count the first character of the polymer string though
+        // otherwise it will be lost
+        counts.insert(self.polymer[0], 1);
         pairs
             .into_iter()
-            .for_each(|([a, _], c)| *counts.entry(a).or_insert(0) += c);
-        let last = bytes.last().unwrap();
-        *counts.entry(*last).or_insert(0) += 1;
+            .for_each(|([_, a], c)| *counts.entry(a).or_insert(0) += c);
+        let (min, max) = counts
+            .into_iter()
+            .fold((0, 0), |(min, max), (_, v)| (min.min(v), max.max(v)));
 
-        let max = counts.values().max().unwrap();
-        let min = counts.values().min().unwrap();
         max - min
     }
 }
 
-fn step(polymer: BTreeMap<Pair, usize>, rules: &BTreeMap<Pair, u8>) -> BTreeMap<Pair, usize> {
+fn step(polymer: BTreeMap<Pair, usize>, rules: &Rules) -> BTreeMap<Pair, usize> {
     let mut new = BTreeMap::new();
 
     for (pair, count) in polymer {

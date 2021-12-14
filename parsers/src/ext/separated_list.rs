@@ -5,25 +5,26 @@ use nom::{
     Err, InputLength, Parser,
 };
 
-pub struct SeperatedList1<F, G, O2> {
+pub struct SeperatedList1<F, G, O, O2, C> {
     pub(crate) f: F,
     pub(crate) g: G,
-    pub(crate) _output: PhantomData<O2>,
+    pub(crate) _output: PhantomData<(O, O2, C)>,
 }
 
-impl<I, F, G, O, O2, E> Parser<I, Vec<O>, E> for SeperatedList1<F, G, O2>
+impl<I, F, G, O, O2, C, E> Parser<I, C, E> for SeperatedList1<F, G, O, O2, C>
 where
     I: Clone + InputLength,
     F: Parser<I, O, E>,
     G: Parser<I, O2, E>,
     E: ParseError<I>,
+    C: Default + Extend<O>,
 {
-    fn parse(&mut self, mut input: I) -> nom::IResult<I, Vec<O>, E> {
-        let mut res = Vec::new();
+    fn parse(&mut self, mut input: I) -> nom::IResult<I, C, E> {
+        let mut res = C::default();
 
         // Parse the first element
         let (i1, n) = self.f.parse(input)?;
-        res.push(n);
+        res.extend_one(n);
         input = i1;
 
         loop {
@@ -41,7 +42,7 @@ where
                         Err(Err::Error(_)) => return Ok((input, res)),
                         Err(e) => return Err(e),
                         Ok((i2, o)) => {
-                            res.push(o);
+                            res.extend_one(o);
                             input = i2;
                         }
                     }

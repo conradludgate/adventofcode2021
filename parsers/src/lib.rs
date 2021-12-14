@@ -1,4 +1,4 @@
-#![feature(trace_macros)]
+#![feature(extend_one)]
 
 use std::str::FromStr;
 

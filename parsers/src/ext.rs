@@ -50,7 +50,7 @@ pub trait ParserExt<I, O, E>: Parser<I, O, E> {
         }
     }
 
-    fn separated_list1<G, O2>(self, g: G) -> SeperatedList1<Self, G, O2>
+    fn separated_list1<G, O2, C>(self, g: G) -> SeperatedList1<Self, G, O, O2, C>
     where
         G: Parser<I, O2, E>,
         Self: Sized,
