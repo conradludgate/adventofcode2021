@@ -7,7 +7,7 @@ pub struct Day06(Vec<usize>);
 
 impl<'i> ChallengeParser<'i> for Day06 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
-        number.separated_list1(tag(",")).map(Self).parse(input)
+        number::<usize>.separated_list1(tag(",")).map(Self).parse(input)
     }
 }
 

@@ -9,7 +9,7 @@ pub struct Day01(Vec<i32>);
 
 impl<'i> ChallengeParser<'i> for Day01 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
-        number.separated_list1(line_ending).map(Self).parse(input)
+        number::<i32>.separated_list1(line_ending).map(Self).parse(input)
     }
 }
 

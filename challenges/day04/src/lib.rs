@@ -64,7 +64,7 @@ impl<'i> ChallengeParser<'i> for Day04 {
             .map_res(FromStr::from_str) // convert digits to decimal
             .map(|number| Cell { marked: false, number });
 
-        let parse_numbers = number.separated_list1(tag(",")); // bingo numbers are seperated by commas
+        let parse_numbers = number::<usize>.separated_list1(tag(",")); // bingo numbers are seperated by commas
         let parse_boards = parse_cell
             .separated_array(tag(" ")) // cells are seperated by spaces
             .map(Row) // 5 cells form a row
