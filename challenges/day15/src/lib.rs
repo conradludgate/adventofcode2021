@@ -1,5 +1,5 @@
+#![feature(int_abs_diff)]
 use aoc::{Challenge, Parser as ChallengeParser};
-use cached::{cached_key, UnboundCache};
 use nom::{
     character::{complete::one_of, streaming::line_ending},
     IResult, Parser,
@@ -24,15 +24,28 @@ impl<'i> Challenge for Day15 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
-        dfs_min(&self.0, 0, 0) - self.0[0][0]
+        let n = self.0.len();
+        let goal = (n - 1, n - 1);
+        self.minpath(goal)
     }
 
     fn part_two(self) -> usize {
-        use pathfinding::prelude::dijkstra;
         let n = self.0.len();
+        let goal = (5 * n - 1, 5 * n - 1);
+        self.minpath(goal)
+    }
+}
 
-        let goal: (usize, usize) = (5 * n - 1, 5 * n - 1);
-        let result = dijkstra(
+impl Day15 {
+    fn s(&self, x: usize, y: usize) -> usize {
+        let n = self.0.len();
+        let v = self.0[y % n][x % n];
+        (v + x / n + y / n - 1) % 9 + 1
+    }
+
+    fn minpath(&self, end: (usize, usize)) -> usize {
+        use pathfinding::prelude::astar;
+        let result = astar(
             &(0, 0),
             |&(x, y)| {
                 let mut suc = vec![];
@@ -42,47 +55,18 @@ impl<'i> Challenge for Day15 {
                 if y > 0 {
                     suc.push((x, y - 1));
                 }
-                if x + 1 < 5 * n {
+                if x < end.0 {
                     suc.push((x + 1, y));
                 }
-                if y + 1 < 5 * n {
+                if y < end.1 {
                     suc.push((x, y + 1));
                 }
-                suc.into_iter().map(|(x, y)| ((x, y), s(&self.0, x, y)))
+                suc.into_iter().map(|(x, y)| ((x, y), self.s(x, y)))
             },
-            |&p| p == goal,
+            |&(x, y)| x.abs_diff(end.0) + y.abs_diff(end.1),
+            |&p| p == end,
         );
         result.unwrap().1
-    }
-}
-
-// increase v, wrapping around as described
-fn s(map: &[Vec<usize>], x: usize, y: usize) -> usize {
-    let n = map.len();
-    let v = map[y % n][x % n];
-    if v == 0 {
-        return 0;
-    }
-    (v + x / n + y / n - 1) % 9 + 1
-}
-
-cached_key! {
-    DFS_MIN: UnboundCache<(usize, usize), usize> = UnboundCache::new();
-    Key = (x, y);
-    fn dfs_min(map: &[Vec<usize>], x: usize, y: usize) -> usize = {
-        if x >= map[0].len() {
-            return usize::MAX;
-        }
-        if y >= map.len() {
-            return usize::MAX;
-        }
-        if x + 1 == map[0].len() && y + 1 == map.len() {
-            return map[y][x];
-        }
-
-        let right = dfs_min(map, x + 1, y);
-        let down = dfs_min(map, x, y + 1);
-        map[y][x] + right.min(down)
     }
 }
 
