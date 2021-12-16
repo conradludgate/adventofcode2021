@@ -44,8 +44,8 @@ impl Day15 {
     }
 
     fn minpath(&self, end: (usize, usize)) -> usize {
-        use pathfinding::prelude::astar;
-        let result = astar(
+        use pathfinding::prelude::dijkstra;
+        let result = dijkstra(
             &(0, 0),
             |&(x, y)| {
                 let mut suc = vec![];
@@ -63,7 +63,6 @@ impl Day15 {
                 }
                 suc.into_iter().map(|(x, y)| ((x, y), self.s(x, y)))
             },
-            |&(x, y)| x.abs_diff(end.0) + y.abs_diff(end.1),
             |&p| p == end,
         );
         result.unwrap().1
