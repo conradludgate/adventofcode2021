@@ -20,10 +20,14 @@ impl Tree {
         alt((
             map(
                 delimited(tag("["), separated_pair(Tree::parse, tag(","), Tree::parse), tag("]")),
-                |(x, y)| Tree::Pair(Box::new(x), Box::new(y)),
+                |(x, y)| Self::new_pair(x, y),
             ),
             map(one_of("0123456789"), |c| Tree::Value(c.to_digit(10).unwrap() as usize)),
         ))(input)
+    }
+
+    fn new_pair(x: Self, y: Self) -> Self {
+        Tree::Pair(Box::new(x), Box::new(y))
     }
 
     fn eval(self) -> usize {
@@ -47,8 +51,8 @@ impl Tree {
         }
     }
 
-    fn add_to(self, rhs: Self) -> Self {
-        let mut t = Tree::Pair(Box::new(self), Box::new(rhs));
+    fn add(x: Self, y: Self) -> Self {
+        let mut t = Self::new_pair(x, y);
         t.reduce();
         t
     }
@@ -61,8 +65,9 @@ impl Tree {
     fn explode_impl(&mut self, depth: usize, left: Option<&mut usize>, right: Option<&mut usize>) -> bool {
         match self {
             Tree::Pair(x, y) => {
-                if depth >= 4 {
-                    if let (Tree::Value(x), Tree::Value(y)) = (&mut **x, &mut **y) {
+                match (&mut **x, &mut **y) {
+                    // if regular pair and depth >= 4, then explode
+                    (Tree::Value(x), Tree::Value(y)) if depth >= 4 => {
                         if let Some(l) = left {
                             *l += *x
                         }
@@ -70,11 +75,14 @@ impl Tree {
                             *r += *y
                         }
                         *self = Tree::Value(0);
-                        return true;
+                        true
+                    }
+                    // else recursively explode, prioritising the left hand side
+                    _ => {
+                        x.explode_impl(depth + 1, left, Some(y.left()))
+                            || y.explode_impl(depth + 1, Some(x.right()), right)
                     }
                 }
-
-                x.explode_impl(depth + 1, left, Some(y.left())) || y.explode_impl(depth + 1, Some(x.right()), right)
             }
             Tree::Value(_) => false,
         }
@@ -82,16 +90,16 @@ impl Tree {
 
     fn split_impl(&mut self) -> bool {
         match self {
+            // recursively split, prioritising the left hand side
             Tree::Pair(x, y) => x.split_impl() || y.split_impl(),
             Tree::Value(v) => {
-                if *v >= 10 {
-                    let x = *v / 2;
-                    let y = (*v + 1) / 2;
-                    *self = Tree::Pair(Box::new(Tree::Value(x)), Box::new(Tree::Value(y)));
-                    true
-                } else {
-                    false
+                let c = *v >= 10;
+                if c {
+                    let x = (*v + 0) / 2; // floor div
+                    let y = (*v + 1) / 2; // ceil div
+                    *self = Tree::new_pair(Tree::Value(x), Tree::Value(y));
                 }
+                c
             }
         }
     }
@@ -111,18 +119,18 @@ impl Challenge for Day18 {
 
     fn part_one(self) -> usize {
         // sum them all in order
-        let tree = self.0.into_iter().reduce(|a, b| a.add_to(b)).unwrap();
+        let tree = self.0.into_iter().reduce(Tree::add).unwrap();
         tree.eval()
     }
 
-    fn part_two(self) -> usize {
+    fn part_two(mut self) -> usize {
         let mut max = 0;
-        for i in 0..(self.0.len() - 1) {
-            let x = &self.0[i];
-            for j in i..self.0.len() {
-                let y = &self.0[j];
-                max = max.max(x.clone().add_to(y.clone()).eval());
-                max = max.max(y.clone().add_to(x.clone()).eval());
+
+        // try every pair and see which has the max magnitude
+        while let Some(x) = self.0.pop() {
+            for y in &self.0 {
+                max = max.max(Tree::add(x.clone(), y.clone()).eval());
+                max = max.max(Tree::add(y.clone(), x.clone()).eval());
             }
         }
 
