@@ -1,3 +1,5 @@
+#![feature(int_abs_diff, array_zip)]
+
 use std::collections::BTreeSet;
 
 use aoc::{Challenge, Parser as ChallengeParser};
@@ -46,6 +48,25 @@ impl Challenge for Day19 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
+        self.run().1.len()
+    }
+
+    fn part_two(self) -> usize {
+        let scanners = self.run().0;
+        let mut distances = vec![];
+        for (i, a) in scanners.iter().enumerate() {
+            for b in &scanners[i..] {
+                let dist = a.zip(*b).map(|(a, b)| a.abs_diff(b));
+                distances.push(dist[0] + dist[1] + dist[2]);
+            }
+        }
+
+        distances.into_iter().max().unwrap() as usize
+    }
+}
+
+impl Day19 {
+    fn run(self) -> (Vec<Point>, BTreeSet<Point>) {
         let mut scanners = Vec::<Point>::new();
         let mut beacons = BTreeSet::<Point>::new(); // beacons will need constant look up
         let mut scan_iter = self.0.into_iter();
@@ -58,28 +79,17 @@ impl Challenge for Day19 {
             for mut scanner in scan_iter {
                 let mut offset = None;
 
-                for i in 0..48 {
+                let mut i = 0;
+                while i < 48 {
                     offset = intersects(&beacons, &scanner.0);
                     if offset.is_some() {
                         break;
                     }
 
                     // rotate perspective afterwards
-                    for s in scanner.0.iter_mut() {
-                        s.rotate_right(1);
-                        if i % 3 == 0 {
-                            s.swap(1, 2);
-                        }
-                        if i % 6 == 0 {
-                            s[2] *= -1;
-                        }
-                        if i % 12 == 0 {
-                            s[1] *= -1;
-                        }
-                        if i % 24 == 0 {
-                            s[0] *= -1;
-                        }
-                    }
+                    scanner.0.iter_mut().for_each(|s| rotate(s, i));
+
+                    i += 1;
                 }
 
                 if let Some(offset) = offset {
@@ -89,6 +99,7 @@ impl Challenge for Day19 {
                             .into_iter()
                             .map(|[a, b, c]| [offset[0] + a, offset[1] + b, offset[2] + c]),
                     );
+                    scanners.push(offset);
                 } else {
                     repeat.push(scanner);
                 }
@@ -101,11 +112,23 @@ impl Challenge for Day19 {
             scan_iter = repeat.into_iter();
         }
 
-        beacons.len()
+        (scanners, beacons)
     }
+}
 
-    fn part_two(self) -> usize {
-        todo!()
+fn rotate(s: &mut [i32], i: usize) {
+    s.rotate_right(1);
+    if i % 3 == 0 {
+        s.swap(1, 2);
+    }
+    if i % 6 == 0 {
+        s[2] *= -1;
+    }
+    if i % 12 == 0 {
+        s[1] *= -1;
+    }
+    if i % 24 == 0 {
+        s[0] *= -1;
     }
 }
 
@@ -153,6 +176,6 @@ mod tests {
     #[test]
     fn part_two() {
         let output = Day19::parse(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
+        assert_eq!(output.part_two(), 3621);
     }
 }
