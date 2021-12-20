@@ -28,7 +28,7 @@ impl<'i> ChallengeParser<'i> for Day20<'i> {
             Self {
                 rules: rules.as_bytes(),
                 lines,
-                background: b'.',
+                background: b'.', // background starts off empty
             },
         ))
     }
@@ -38,29 +38,37 @@ impl<'i> Challenge for Day20<'i> {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
-        let (new, b, w) = self.apply();
-
-        // for line in new.chunks_exact(w) {
-        //     dbg!(unsafe { std::str::from_utf8_unchecked(line) });
-        // }
-
-        let new = Day20 {
-            rules: self.rules,
-            lines: new.chunks_exact(w).collect(),
-            background: b,
-        };
-
-        let output = new.apply().0;
-
-        output.into_iter().filter(|&c| c == b'#').count()
+        // part 1 requires 2 enchances
+        self.enhance(2 - 1)
     }
 
     fn part_two(self) -> usize {
-        todo!()
+        // part 2 requires 50 enhances
+        self.enhance(50 - 1)
     }
 }
 
 impl<'i> Day20<'i> {
+    /// repeatedly enchance the image i+1 times
+    /// returning the number of activated cells at the end
+    pub fn enhance(&self, i: usize) -> usize {
+        let (buf, b, w) = self.apply();
+
+        if i == 0 {
+            buf.into_iter().filter(|&c| c == b'#').count()
+        } else {
+            let new = Day20 {
+                rules: self.rules,
+                lines: buf.chunks_exact(w).collect(),
+                background: b,
+            };
+
+            // recursive because __lifetimes__
+            new.enhance(i - 1)
+        }
+    }
+
+    /// enhance an image once into a single flat buffer
     pub fn apply(&self) -> (Vec<u8>, u8, usize) {
         let w = self.lines[0].len() + 4; // padding of 2 on each end
         let h = self.lines.len() + 4; // padding of 2 on each end
@@ -71,11 +79,14 @@ impl<'i> Day20<'i> {
             v.push(self.rules[self.read(i)]);
         }
 
+        // make sure to account for the infinite image background
         let b = self.rules[if self.background == b'#' { 511 } else { 0 }];
 
         (v, b, w)
     }
 
+    /// read 3x3 (9bit) binary value from image grid
+    /// including padding
     pub fn read(&self, i: usize) -> usize {
         let l = self.lines[0].len();
         let w = l + 4; // padding of 2 on each end
@@ -83,19 +94,6 @@ impl<'i> Day20<'i> {
         let (x, y) = (i % w, i / w);
 
         let mut o: usize = 0;
-
-        // let mut read_line = |line: &[u8]| {
-        //     for j in 0..3 {
-        //         o <<= 1;
-        //         let j = j + x;
-        //         let c = if j < 2 || j + 2 >= w {
-        //             self.background
-        //         } else {
-        //             line[j - 2]
-        //         };
-        //         o |= (c == b'#') as usize;
-        //     }
-        // };
 
         for k in 0..3 {
             let k = k + y;
@@ -106,7 +104,7 @@ impl<'i> Day20<'i> {
                     o |= c;
                 }
             } else {
-                let line = &self.lines[k-2];
+                let line = &self.lines[k - 2];
                 for j in 0..3 {
                     o <<= 1;
                     let j = j + x;
@@ -119,34 +117,6 @@ impl<'i> Day20<'i> {
                 }
             }
         }
-
-        // if y == 0 {
-        //     read_line(&self.lines[0]);
-        // } else if y == 1 {
-        //     read_line(&self.lines[0]);
-        //     read_line(&self.lines[1]);
-        // } else if y == self.lines.len() + 3 {
-        //     read_line(&self.lines[y-4]);
-        //     let c = (self.background == b'#') as usize;
-        //     for i in 0..6 {
-        //         o <<= 1;
-        //         o |= c;
-        //     }
-        // } else if y == self.lines.len() + 2 {
-        //     read_line(&self.lines[y-4]);
-        //     read_line(&self.lines[y-3]);
-        //     let c = (self.background == b'#') as usize;
-        //     for i in 0..3 {
-        //         o <<= 1;
-        //         o |= c;
-        //     }
-        // } else {
-        //     let y0 = y - 2;
-        //     let y1 = y + 1;
-        //     for line in &self.lines[y0..y1] {
-        //         read_line(line);
-        //     }
-        // }
 
         o
     }
@@ -174,6 +144,6 @@ mod tests {
     #[test]
     fn part_two() {
         let output = Day20::parse(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
+        assert_eq!(output.part_two(), 3351);
     }
 }
