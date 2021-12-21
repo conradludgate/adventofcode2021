@@ -1,5 +1,5 @@
 use aoc::{Challenge, Parser};
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BatchSize};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use day21::Day21;
 
 pub fn day21(c: &mut Criterion) {

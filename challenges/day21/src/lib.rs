@@ -1,21 +1,16 @@
 use aoc::{Challenge, Parser as ChallengeParser};
-use nom::{
-    bytes::complete::tag,
-    character::streaming::line_ending,
-    sequence::{delimited, tuple},
-    IResult, Parser,
-};
-use parsers::number;
+use nom::IResult;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Day21([u8; 2]);
 
 impl<'i> ChallengeParser<'i> for Day21 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
-        let player1 = delimited(tag("Player 1 starting position: "), number, line_ending);
-        let player2 = delimited(tag("Player 2 starting position: "), number, line_ending);
-
-        tuple((player1, player2)).map(|(x, y)| Day21([x, y])).parse(input)
+        // "Player 1 starting position: ".len() == 28
+        let bytes = input.as_bytes();
+        let a = bytes[28] - b'0';
+        let b = bytes[28 + 2 + 28] - b'0';
+        Ok((&input[60..], Day21([a, b])))
     }
 }
 
@@ -27,7 +22,7 @@ impl Challenge for Day21 {
         let mut turns = 0;
         let mut roll = 6; // dice starts off at 1+2+3
         loop {
-            let i = turns%2;
+            let i = turns % 2;
             let (pos, score) = play(self.0[i], scores[i], roll);
             self.0[i] = pos;
             scores[i] = score;
@@ -40,7 +35,7 @@ impl Challenge for Day21 {
             turns += 1;
 
             if score >= 1000 {
-                break scores[turns%2] * turns * 3;
+                break scores[turns % 2] * turns * 3;
             }
         }
     }
