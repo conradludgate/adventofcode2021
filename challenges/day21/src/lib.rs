@@ -8,14 +8,14 @@ use nom::{
 use parsers::number;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Day21(u8, u8);
+pub struct Day21([u8; 2]);
 
 impl<'i> ChallengeParser<'i> for Day21 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
         let player1 = delimited(tag("Player 1 starting position: "), number, line_ending);
         let player2 = delimited(tag("Player 2 starting position: "), number, line_ending);
 
-        tuple((player1, player2)).map(|(x, y)| Day21(x, y)).parse(input)
+        tuple((player1, player2)).map(|(x, y)| Day21([x, y])).parse(input)
     }
 }
 
@@ -23,44 +23,53 @@ impl Challenge for Day21 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(mut self) -> usize {
-        let mut scores = (0, 0);
-        let mut dice = (1..=100).cycle();
-        let mut rolls = 0;
+        let mut scores = [0, 0];
+        let mut turns = 0;
+        let mut roll = 6; // dice starts off at 1+2+3
         loop {
-            play(&mut self.0, &mut scores.0, roll(&mut dice));
-            rolls += 3;
+            let i = turns%2;
+            let (pos, score) = play(self.0[i], scores[i], roll);
+            self.0[i] = pos;
+            scores[i] = score;
 
-            if scores.0 >= 1000 {
-                break scores.1 * rolls;
+            // Dice first rolls, a + a+1 + a+2 = (3a + 3).
+            // After then rulls a+3 + a+4 + a+5 = (3a + 12).
+            // Difference of 9 each turn.
+            roll += 9;
+            roll %= 10;
+            turns += 1;
+
+            if score >= 1000 {
+                break scores[turns%2] * turns * 3;
             }
-
-            std::mem::swap(&mut scores.0, &mut scores.1);
-            std::mem::swap(&mut self.0, &mut self.1);
         }
     }
 
     fn part_two(self) -> usize {
-        let (a, b) = self.count((0, 0));
+        let [a, b] = self.count([0, 0]);
         a.max(b)
     }
 }
 
 impl Day21 {
-    fn count(self, scores: (usize, usize)) -> (usize, usize) {
-        let mut counts = (0, 0);
+    fn count(self, scores: [usize; 2]) -> [usize; 2] {
+        let mut counts = [0, 0];
 
         for (roll, count) in MOVES {
-            let (mut a, b) = scores;
-            let Self(mut x, y) = self;
-            play(&mut x, &mut a, roll);
+            let [a, b] = scores;
+            let Self([x, y]) = self;
+            let (x, a) = play(x, a, roll);
             if a >= 21 {
-                counts.0 += count;
+                counts[0] += count;
             } else {
-                let scores = (b, a);
-                let pos = Self(y, x);
-                let (b, a) = pos.count(scores);
-                counts.0 += a * count;
-                counts.1 += b * count;
+                // swap scores/positions for next player to be 'player 1'
+                let scores = [b, a];
+                let pos = Self([y, x]);
+
+                // similarly swap outcome counts
+                let [b, a] = pos.count(scores);
+                counts[0] += a * count;
+                counts[1] += b * count;
             }
         }
 
@@ -72,18 +81,15 @@ impl Day21 {
 /// along with their respecitve distributions across the 3^3 dice rolls
 const MOVES: [(u8, usize); 7] = [(3, 1), (4, 3), (5, 6), (6, 7), (7, 6), (8, 3), (9, 1)];
 
-fn roll(dice: &mut impl Iterator<Item = u8>) -> u8 {
-    dice.next().unwrap() % 10 + dice.next().unwrap() % 10 + dice.next().unwrap() % 10
-}
+fn play(mut pos: u8, mut score: usize, roll: u8) -> (u8, usize) {
+    pos += roll;
+    pos %= 10;
 
-fn play(pos: &mut u8, score: &mut usize, roll: u8) {
-    *pos += roll;
-    *pos %= 10;
-
-    *score += *pos as usize;
-    if *pos == 0 {
-        *score += 10; // edge case
+    score += pos as usize;
+    if pos == 0 {
+        score += 10; // edge case
     }
+    (pos, score)
 }
 
 #[cfg(test)]
