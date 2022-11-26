@@ -45,9 +45,6 @@ impl State {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-// first 8 slots are divided into the 4 rooms
-// the first of each pair being the closest slot to the corridor
-// the last 7 slots are the corridor
 pub struct Day23 {
     rooms: [[State; 2]; 4],
     corridor: [State; 11],
@@ -120,30 +117,6 @@ impl Day23 {
                 continue;
             }
 
-            // // tackle the extreme ends of the corridor
-            // if (i == 0 && self.corridor[1] == State::Empty) || (i == 1 && self.corridor[0] == State::Empty) {
-            //     let mut pos = *self;
-            //     pos.corridor.swap(0, 1);
-            //     output.push((pos, state.cost()))
-            // }
-            // if (i == 10 && self.corridor[9] == State::Empty) || (i == 9 && self.corridor[10] == State::Empty) {
-            //     let mut pos = *self;
-            //     pos.corridor.swap(9, 10);
-            //     output.push((pos, state.cost()))
-            // }
-
-            // // handle other corridor to corridor moves
-            // if i > 1 && self.corridor[i - 2] == State::Empty {
-            //     let mut pos = *self;
-            //     pos.corridor.swap(i, i - 2);
-            //     output.push((pos, state.cost() * 2))
-            // }
-            // if i < 9 && self.corridor[i + 2] == State::Empty {
-            //     let mut pos = *self;
-            //     pos.corridor.swap(i, i + 2);
-            //     output.push((pos, state.cost() * 2))
-            // }
-
             // try from corridor to room
             let x = state.room();
             let offset = x * 2 + 2;
@@ -202,70 +175,43 @@ impl Day23 {
                     output.push((pos, state.cost() * (room_pos + 1 + x.abs_diff(offset))));
                 }
             }
-
-            // if room[0] == State::Empty {
-            //     if self.corridor[offset - 1] == State::Empty {
-            //         let mut pos = *self;
-            //         pos.rooms[i][1] = State::Empty;
-            //         pos.corridor[offset - 1] = room[1];
-            //         output.push((pos, room[1].cost() * 3));
-            //     }
-            //     if self.corridor[offset + 1] == State::Empty {
-            //         let mut pos = *self;
-            //         pos.rooms[i][1] = State::Empty;
-            //         pos.corridor[offset + 1] = room[1];
-            //         output.push((pos, room[1].cost() * 3));
-            //     }
-            // } else {
-            //     if self.corridor[offset - 1] == State::Empty {
-            //         let mut pos = *self;
-            //         pos.rooms[i][0] = State::Empty;
-            //         pos.corridor[offset - 1] = room[0];
-            //         output.push((pos, room[1].cost() * 2));
-            //     }
-            //     if self.corridor[offset + 1] == State::Empty {
-            //         let mut pos = *self;
-            //         pos.rooms[i][0] = State::Empty;
-            //         pos.corridor[offset + 1] = room[0];
-            //         output.push((pos, room[1].cost() * 2));
-            //     }
-            // }
         }
 
         output
     }
 
     fn heuristic(&self) -> usize {
-        let mut distance = 0;
-        for (i, room) in self.rooms.into_iter().enumerate() {
-            // both correct
-            if room[0] == room[1] && room[0].room() == i {
-                continue;
-            }
+        // let mut distance = 0;
+        // for (i, room) in self.rooms.into_iter().enumerate() {
+        //     // both correct
+        //     if room[0] == room[1] && room[0].room() == i {
+        //         continue;
+        //     }
 
-            // if outer is occupied
-            if room[0].room() < 4 {
-                let dist = room[0].room();
-                distance += (dist * 2 + 2) * room[0].cost();
-            }
+        //     // if outer is occupied
+        //     if room[0].room() < 4 {
+        //         let dist = room[0].room();
+        //         distance += (dist * 2 + 2) * room[0].cost();
+        //     }
 
-            // if inner is correct
-            if room[1].room() == i {
-                continue;
-            }
+        //     // if inner is correct
+        //     if room[1].room() == i {
+        //         continue;
+        //     }
 
-            // if inner is occupied
-            if room[1].room() < 4 {
-                let dist = room[1].room();
-                distance += (dist * 2 + 3) * room[1].cost();
-            }
-        }
-        for (i, state) in self.corridor.into_iter().enumerate() {
-            let x = state.room();
-            let offset = x * 2 + 2;
-            distance += state.cost() * (offset.abs_diff(i) + 1)
-        }
-        distance
+        //     // if inner is occupied
+        //     if room[1].room() < 4 {
+        //         let dist = room[1].room();
+        //         distance += (dist * 2 + 3) * room[1].cost();
+        //     }
+        // }
+        // for (i, state) in self.corridor.into_iter().enumerate() {
+        //     let x = state.room();
+        //     let offset = x * 2 + 2;
+        //     distance += state.cost() * (offset.abs_diff(i) + 1)
+        // }
+        // distance
+        0
     }
 }
 
@@ -303,13 +249,6 @@ mod tests {
     fn parse() {
         let output = Day23::parse(INPUT).unwrap().1;
         println!("{:?}", output);
-    }
-
-    #[test]
-    fn heuristic() {
-        let output = Day23::parse(INPUT).unwrap().1;
-        assert_eq!(Day23::SUCCESS.heuristic(), 0);
-        assert_eq!(output.heuristic(), 17683);
     }
 
     #[test]
