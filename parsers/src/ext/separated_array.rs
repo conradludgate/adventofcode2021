@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use generic_vec::ArrayVec;
+use arrayvec::ArrayVec;
 use nom::{error::ParseError, InputLength, Parser};
 
 pub struct SeperatedArray<F, G, O2, const N: usize> {
@@ -31,7 +31,7 @@ where
             input = i1;
         }
 
-        Ok((input, res.into_array()))
+        Ok((input, res.into_inner().map_err(drop).unwrap()))
     }
 }
 
@@ -54,6 +54,6 @@ where
             input = i1;
         }
 
-        Ok((input, res.into_array()))
+        Ok((input, res.into_inner().map_err(drop).unwrap()))
     }
 }

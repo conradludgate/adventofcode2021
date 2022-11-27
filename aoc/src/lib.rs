@@ -1,6 +1,4 @@
-use std::{collections::HashMap, path::Path};
-
-use reqwest::header;
+use std::path::Path;
 
 const YEAR: usize = 2021;
 
@@ -42,22 +40,15 @@ pub fn run<'i, P: Parser<'i>>(input: &'i str) {
 
 fn submit<C: Challenge>(level: usize, answer: usize) {
     let session = dotenv::var("AOC_SESSION").unwrap();
-    let mut headers = header::HeaderMap::new();
-    headers.insert(
-        header::COOKIE,
-        header::HeaderValue::from_str(&format!("session={}", session)).unwrap(),
-    );
-    let client = reqwest::blocking::Client::builder()
-        .default_headers(headers)
-        .build()
-        .unwrap();
 
     let day = C::NAME[3..].parse::<i32>().unwrap();
     let url = format!("https://adventofcode.com/{}/day/{}/answer", YEAR, day);
 
-    client
-        .post(&url)
-        .form(&HashMap::from([("level", level), ("answer", answer)]))
-        .send()
+    ureq::post(&url)
+        .set("Cookie", &format!("session={session}"))
+        .send_form(&[
+            ("level", &format!("{level}")),
+            ("answer", &format!("{answer}")),
+        ])
         .unwrap();
 }

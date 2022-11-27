@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 nom = "7.1"
-generic-vec = { package = "cl-generic-vec", version = "0.1.4", default-features = false, features = ["nightly"] }
+arrayvec = "0.7"
