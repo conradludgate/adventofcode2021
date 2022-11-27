@@ -10,6 +10,7 @@ nom = "7.1"
 parsers = { path = "../../parsers" }
 aoc = { path = "../../aoc" }
 z3 = "0.11.2"
+z3-sys = { version = "0.7", features = ["static-link-z3"] }
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }

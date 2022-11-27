@@ -1,14 +1,15 @@
-use std::time::{Duration, Instant};
-
 use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{line_ending, space0},
+    character::complete::{digit1, line_ending, space0},
+    combinator::{map_res, opt, recognize},
     sequence::tuple,
     IResult, Parser,
 };
-use parsers::{number, ParserExt};
+use parsers::ParserExt;
+use z3::ast::Ast;
+use z3::{ast, Config, Context, Optimize};
 
 #[repr(usize)]
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -39,6 +40,7 @@ enum Value {
 impl Value {
     fn parse(input: &str) -> IResult<&str, Self> {
         let (input, _) = space0(input)?;
+        let number = map_res(recognize(tuple((opt(tag("-")), digit1))), |x: &str| x.parse::<i64>());
         alt((Reg::parse.map(Self::Reg), number.map(Self::Number)))(input)
     }
 }
@@ -67,37 +69,64 @@ impl Instruction {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Default)]
-struct State([i64; 4]);
+#[derive(Debug)]
+struct State<'ctx> {
+    regs: [ast::BV<'ctx>; 4],
+    ctx: &'ctx Context,
+    solver: Optimize<'ctx>,
+    inputs: Vec<ast::BV<'ctx>>,
+    index: usize,
+}
 
-impl State {
-    fn get(&self, value: Value) -> i64 {
-        match value {
-            Value::Reg(reg) => self.get_reg(reg),
-            Value::Number(val) => val,
+impl<'ctx> State<'ctx> {
+    fn new(ctx: &'ctx Context) -> Self {
+        let solver = Optimize::new(ctx);
+        let regs = std::array::from_fn(|_| ast::BV::from_i64(ctx, 0, 64));
+        Self {
+            regs,
+            ctx,
+            solver,
+            inputs: vec![],
+            index: 0,
         }
     }
-    fn get_reg(&self, reg: Reg) -> i64 {
-        self.0[reg as usize]
+
+    fn get(&self, value: Value) -> ast::BV {
+        match value {
+            Value::Reg(reg) => self.get_reg(reg).clone(),
+            Value::Number(val) => ast::BV::from_i64(self.ctx, val, 64),
+        }
+    }
+    fn get_reg(&self, reg: Reg) -> &ast::BV {
+        &self.regs[reg as usize]
     }
 
-    fn apply<'i>(&mut self, inst: Instruction, mut input: &'i [i64]) -> &'i [i64] {
+    fn apply(&mut self, inst: Instruction) {
         let (reg, v) = match inst {
             Instruction::Inp(reg) => {
-                let x;
-                (x, input) = input.split_first().unwrap();
-                (reg, *x)
+                let i = ast::BV::new_const(self.ctx, format!("in_{}", self.inputs.len()), 64);
+                // 0 < i <= 9 (non zero single digit)
+                self.solver.assert(&i.bvsgt(&ast::BV::from_i64(self.ctx, 0, 64)));
+                self.solver.assert(&i.bvsle(&ast::BV::from_i64(self.ctx, 9, 64)));
+                self.regs[reg as usize] = i.clone();
+                self.inputs.push(i);
+                return;
             }
             Instruction::Add((reg, x)) => (reg, self.get_reg(reg) + self.get(x)),
             Instruction::Mul((reg, x)) => (reg, self.get_reg(reg) * self.get(x)),
-            Instruction::Div((reg, x)) => (reg, self.get_reg(reg) / self.get(x)),
-            Instruction::Mod((reg, x)) => (reg, self.get_reg(reg) % self.get(x)),
+            Instruction::Div((reg, x)) => (reg, self.get_reg(reg).bvsdiv(&self.get(x))),
+            Instruction::Mod((reg, x)) => (reg, self.get_reg(reg).bvsmod(&self.get(x))),
             // 0 if equal, 1 otherwise
-            Instruction::Eql((reg, x)) => (reg, (self.get_reg(reg) != self.get(x)) as i64),
+            Instruction::Eql((reg, x)) => {
+                let cond = self.get_reg(reg)._eq(&self.get(x));
+                (reg, cond.ite(&self.get(Value::Number(0)), &self.get(Value::Number(1))))
+            }
         };
-        self.0[reg as usize] = v;
-
-        input
+        let output = ast::BV::new_const(self.ctx, format!("out_{}", self.index), 64);
+        self.solver.assert(&(output._eq(&v)));
+        drop(v);
+        self.regs[reg as usize] = output;
+        self.index += 1;
     }
 }
 
@@ -110,60 +139,64 @@ impl<'i> ChallengeParser<'i> for Day24 {
     }
 }
 
-impl Day24 {
-    fn run(&self, input: &[i64]) -> State {
-        let mut state = State::default();
-        self.0
-            .iter()
-            .copied()
-            .fold(input, |input, inst| state.apply(inst, input));
-        state
-    }
-}
-
 impl Challenge for Day24 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
-        let mut digits = [9; 14]; //100_000_000_000_000;
-        let mut start = Instant::now();
-        loop {
-            if start.elapsed() > Duration::from_secs(1) {
-                println!("{digits:?}");
-                start = Instant::now();
-            }
+        let cfg = Config::new();
+        let ctx = Context::new(&cfg);
+        let mut state = State::new(&ctx);
 
-            if digits.iter().any(|&x| x == 0) || self.run(&digits).get_reg(Reg::Z) != 0 {
-                for digit in digits.iter_mut().rev() {
-                    *digit -= 1;
-                    if *digit != 0 {
-                        break;
-                    }
-                    *digit = 9;
-                }
-                continue;
-            }
+        self.0.iter().copied().for_each(|inst| state.apply(inst));
 
-            let mut output = 0;
-            for i in digits {
-                output *= 10;
-                output += i as usize;
-            }
-            break output;
-        }
+        // z == 0
+        state
+            .solver
+            .assert(&(state.get_reg(Reg::Z)._eq(&ast::BV::from_i64(&ctx, 0, 64))));
+
+        // digits into single number
+        let input = state
+            .inputs
+            .into_iter()
+            .reduce(|a, b| a * &ast::BV::from_i64(&ctx, 10, 64) + b)
+            .unwrap();
+
+        state.solver.maximize(&input);
+        state.solver.check(&[]);
+
+        let model = state.solver.get_model().unwrap();
+        let res = model.eval(&input, true).unwrap();
+        res.as_i64().unwrap() as usize
     }
 
     fn part_two(self) -> usize {
-        todo!()
+        let cfg = Config::new();
+        let ctx = Context::new(&cfg);
+        let mut state = State::new(&ctx);
+
+        self.0.iter().copied().for_each(|inst| state.apply(inst));
+
+        // z == 0
+        state
+            .solver
+            .assert(&(state.get_reg(Reg::Z)._eq(&ast::BV::from_i64(&ctx, 0, 64))));
+
+        // digits into single number
+        let input = state.inputs.into_iter().reduce(|a, b| a * 10_i64 + b).unwrap();
+
+        state.solver.minimize(&input);
+        state.solver.check(&[]);
+
+        let model = state.solver.get_model().unwrap();
+        let res = model.eval(&input, true).unwrap();
+        res.as_i64().unwrap() as usize
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::State;
-
     use super::Day24;
-    use aoc::{Challenge, Parser};
+    use aoc::Parser;
 
     const INPUT: &str = "inp w
 add z w
@@ -181,21 +214,5 @@ mod w 2";
     fn parse() {
         let output = Day24::parse(INPUT).unwrap().1;
         println!("{:?}", output);
-    }
-
-    #[test]
-    fn part_one() {
-        let output = Day24::parse(INPUT).unwrap().1;
-        assert_eq!(
-            output.run(&[10]),
-            // order of bits: 4218
-            State([0, 1, 0, 1]),
-        );
-    }
-
-    #[test]
-    fn part_two() {
-        let output = Day24::parse(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
     }
 }
