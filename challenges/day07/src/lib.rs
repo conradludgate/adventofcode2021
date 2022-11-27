@@ -1,5 +1,3 @@
-#![feature(int_abs_diff)]
-
 use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{bytes::complete::tag, IResult, Parser};
 use parsers::{number, ParserExt};

@@ -33,7 +33,7 @@ impl Tree {
     fn eval(self) -> usize {
         match self {
             Tree::Pair(x, y) => 3 * x.eval() + 2 * y.eval(),
-            Tree::Value(v) => v as usize,
+            Tree::Value(v) => v,
         }
     }
 

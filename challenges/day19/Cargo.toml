@@ -9,6 +9,7 @@ edition = "2021"
 nom = "7.1"
 parsers = { path = "../../parsers" }
 aoc = { path = "../../aoc" }
+array-bin-ops = "0.1.6"
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }

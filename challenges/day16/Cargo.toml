@@ -9,7 +9,7 @@ edition = "2021"
 nom = "7.1"
 parsers = { path = "../../parsers" }
 aoc = { path = "../../aoc" }
-bitvec = "0.22"
+bitvec = "1"
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }

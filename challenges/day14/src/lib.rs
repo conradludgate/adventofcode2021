@@ -1,4 +1,3 @@
-#![feature(array_from_fn)]
 #![feature(array_windows)]
 use std::array;
 

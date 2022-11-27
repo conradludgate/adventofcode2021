@@ -29,7 +29,7 @@ impl<'i> ChallengeParser<'i> for Day17 {
     }
 }
 
-impl<'i> Challenge for Day17 {
+impl Challenge for Day17 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {

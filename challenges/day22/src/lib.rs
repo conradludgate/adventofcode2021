@@ -49,7 +49,7 @@ impl Range {
     /// 3..5 7..9 -> 3..5 7..5 7..9 (inner is invalid but that's ok since it's length 0)
     /// 3..9 5..7 -> 3..5 5..7 7..9
     fn split(self, other: Self) -> [Self; 3] {
-        if selt.start > other.start {
+        if self.start > other.start {
             return other.split(self);
         } if self.start == other.start && self.end > other.end {
             return other.split(self);
@@ -57,7 +57,7 @@ impl Range {
 
         let a = self.start;
         let b = other.start;
-        let c = self.end.min(other.end).max(b);
+        let c = self.end.clamp(b, other.end);
         let d = self.end.max(other.end);
 
         [
@@ -134,7 +134,7 @@ impl Cuboid {
                 let index = index * 3 + j;
                 for k in 0..3 {
                     let index = index * 3 + k;
-                    out[i] = Self {
+                    out[index] = Self {
                         x: x[i],
                         y: y[j],
                         z: z[k],

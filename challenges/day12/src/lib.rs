@@ -1,5 +1,3 @@
-#![feature(generic_associated_types)]
-
 use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{
     bytes::complete::tag,

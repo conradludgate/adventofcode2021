@@ -1,8 +1,7 @@
-#![feature(int_abs_diff, array_zip)]
-
 use std::collections::BTreeSet;
 
 use aoc::{Challenge, Parser as ChallengeParser};
+use array_bin_ops::Array;
 use nom::{
     bytes::complete::{tag, take_until},
     character::complete::{digit1, line_ending},
@@ -56,7 +55,7 @@ impl Challenge for Day19 {
         let mut distances = vec![];
         for (i, a) in scanners.iter().enumerate() {
             for b in &scanners[i..] {
-                let dist = a.zip(*b).map(|(a, b)| a.abs_diff(b));
+                let dist = Array(*a).zip_map(*b, |a, b| a.abs_diff(b));
                 distances.push(dist[0] + dist[1] + dist[2]);
             }
         }
@@ -106,7 +105,7 @@ impl Day19 {
             }
 
             if repeat.is_empty() {
-                break
+                break;
             }
 
             scan_iter = repeat.into_iter();

@@ -45,12 +45,12 @@ impl State {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct Day23 {
-    rooms: [[State; 2]; 4],
+pub struct Position<const N: usize> {
+    rooms: [[State; N]; 4],
     corridor: [State; 11],
 }
 
-impl fmt::Display for Day23 {
+impl<const N: usize> fmt::Display for Position<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "#############")?;
         write!(f, "#")?;
@@ -62,12 +62,18 @@ impl fmt::Display for Day23 {
             write!(f, "{}#", room[0])?;
         }
         write!(f, "##\n  #")?;
-        for room in self.rooms {
-            write!(f, "{}#", room[1])?;
+        for i in 1..N {
+            for room in self.rooms {
+                write!(f, "{}#", room[i])?;
+            }
+            write!(f, "\n  #")?;
         }
-        writeln!(f, "  \n  #########")
+        writeln!(f, "########")
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub struct Day23(Position<2>);
 
 impl<'i> ChallengeParser<'i> for Day23 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
@@ -93,26 +99,25 @@ impl<'i> ChallengeParser<'i> for Day23 {
         }
         Ok((
             "",
-            Self {
+            Self(Position {
                 rooms,
                 corridor: [State::Empty; 11],
-            },
+            }),
         ))
     }
 }
 
-impl Day23 {
+impl<const N: usize> Position<N> {
     const SUCCESS: Self = Self {
-        rooms: [[State::A; 2], [State::B; 2], [State::C; 2], [State::D; 2]],
+        rooms: [[State::A; N], [State::B; N], [State::C; N], [State::D; N]],
         corridor: [State::Empty; 11],
     };
 
     fn successors(&self) -> Vec<(Self, usize)> {
-        // println!("{self:?}");
         let mut output = vec![];
 
         // first, try move pieces in the cooridor
-        for (i, state) in self.corridor.into_iter().enumerate() {
+        'outer: for (i, state) in self.corridor.into_iter().enumerate() {
             if state == State::Empty {
                 continue;
             }
@@ -120,16 +125,21 @@ impl Day23 {
             // try from corridor to room
             let x = state.room();
             let offset = x * 2 + 2;
-            let rooms = self.rooms[x];
+            let room = self.rooms[x];
 
-            // if our room is empty/contains our friend
-            let room_pos = if rooms == [State::Empty; 2] {
-                1
-            } else if rooms == [State::Empty, state] {
-                0
-            } else {
-                continue;
-            };
+            // if our room is empty/contains only our friends
+            let mut room_state = [State::Empty; N];
+            let mut room_pos = N - 1;
+            loop {
+                if room == room_state {
+                    break;
+                }
+                if room_pos == 0 {
+                    continue 'outer;
+                }
+                room_state[room_pos] = state;
+                room_pos -= 1;
+            }
 
             // if there's nothing in the way between the room and our position
             let range = if offset < i { offset..i } else { i + 1..offset };
@@ -142,21 +152,18 @@ impl Day23 {
         }
 
         // try move pieces in the rooms into the corridor
-        for (i, room) in self.rooms.into_iter().enumerate() {
-            if room[1] == State::Empty {
-                continue;
-            }
-            let offset = i * 2 + 2;
-
-            let (room_pos, state) = match room {
-                [State::Empty, State::Empty] => continue,
-                [State::Empty, state] if state.room() == i => continue,
-                [state1, state2] if state1.room() == i && state2.room() == i => continue,
-                [State::Empty, state] => (1, state),
-                [state, _] => (0, state),
+        'outer: for (i, room) in self.rooms.into_iter().enumerate() {
+            let Some(room_pos) = room.iter().position(|&s| s != State::Empty) else {
+                continue 'outer
             };
+            let state = room[room_pos];
+            // if our room is empty/contains only our friends, we should not try to move
+            if state.room() == i && room[room_pos..].iter().all(|&s| s == state) {
+                continue 'outer;
+            }
 
             // corridor positions
+            let offset = i * 2 + 2;
             for x in 0..=10 {
                 // ignore directly above a room
                 if [2, 4, 6, 8].contains(&x) {
@@ -181,37 +188,28 @@ impl Day23 {
     }
 
     fn heuristic(&self) -> usize {
-        // let mut distance = 0;
-        // for (i, room) in self.rooms.into_iter().enumerate() {
-        //     // both correct
-        //     if room[0] == room[1] && room[0].room() == i {
-        //         continue;
-        //     }
+        let mut distance = 0;
+        for (i, room) in self.rooms.into_iter().enumerate() {
+            for (j, state) in room.into_iter().enumerate() {
+                if state.room() != i {
+                    distance += state.cost() * (4 + j);
+                }
+            }
+        }
+        for (i, state) in self.corridor.into_iter().enumerate() {
+            let x = state.room();
+            let offset = x * 2 + 2;
+            distance += state.cost() * (offset.abs_diff(i) + 1)
+        }
+        distance
+    }
 
-        //     // if outer is occupied
-        //     if room[0].room() < 4 {
-        //         let dist = room[0].room();
-        //         distance += (dist * 2 + 2) * room[0].cost();
-        //     }
-
-        //     // if inner is correct
-        //     if room[1].room() == i {
-        //         continue;
-        //     }
-
-        //     // if inner is occupied
-        //     if room[1].room() < 4 {
-        //         let dist = room[1].room();
-        //         distance += (dist * 2 + 3) * room[1].cost();
-        //     }
-        // }
-        // for (i, state) in self.corridor.into_iter().enumerate() {
-        //     let x = state.room();
-        //     let offset = x * 2 + 2;
-        //     distance += state.cost() * (offset.abs_diff(i) + 1)
-        // }
-        // distance
-        0
+    fn solve(&self) -> usize {
+        let (_, cost) = pathfinding::directed::astar::astar(self, Position::successors, Position::heuristic, |x| {
+            x == &Position::SUCCESS
+        })
+        .unwrap();
+        cost
     }
 }
 
@@ -219,17 +217,22 @@ impl Challenge for Day23 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
-        let (path, cost) =
-            pathfinding::directed::astar::astar(&self, Self::successors, Self::heuristic, |x| x == &Self::SUCCESS)
-                .unwrap();
-        for i in path {
-            println!("{i}");
-        }
-        cost
+        self.0.solve()
     }
 
     fn part_two(self) -> usize {
-        todo!()
+        // unfold
+        // #D#C#B#A#
+        // #D#B#A#C#
+        let Position { rooms, corridor } = self.0;
+        let rooms = [
+            [rooms[0][0], State::D, State::D, rooms[0][1]],
+            [rooms[1][0], State::C, State::B, rooms[1][1]],
+            [rooms[2][0], State::B, State::A, rooms[2][1]],
+            [rooms[3][0], State::A, State::C, rooms[3][1]],
+        ];
+        let pos = Position { rooms, corridor };
+        pos.solve()
     }
 }
 
@@ -260,6 +263,6 @@ mod tests {
     #[test]
     fn part_two() {
         let output = Day23::parse(INPUT).unwrap().1;
-        assert_eq!(output.part_two(), 0);
+        assert_eq!(output.part_two(), 44169);
     }
 }

@@ -5,7 +5,7 @@ use nom::{character::complete::one_of, IResult, Parser};
 use parsers::ParserExt;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Day16(BitVec<Msb0, u8>);
+pub struct Day16(BitVec<u8, Msb0>);
 
 impl<'i> ChallengeParser<'i> for Day16 {
     fn parse(input: &'i str) -> IResult<&'i str, Self> {
@@ -44,7 +44,7 @@ enum PacketType {
     Prod(Vec<Packet>),
     Min(Vec<Packet>),
     Max(Vec<Packet>),
-    Lit(BitVec<Msb0, u8>),
+    Lit(BitVec<u8, Msb0>),
     Gt(Vec<Packet>),
     Lt(Vec<Packet>),
     Eq(Vec<Packet>),
@@ -78,7 +78,7 @@ impl Packet {
         }
     }
 
-    fn parse(bits: &BitSlice<Msb0, u8>) -> (Self, &BitSlice<Msb0, u8>) {
+    fn parse(bits: &BitSlice<u8, Msb0>) -> (Self, &BitSlice<u8, Msb0>) {
         let (ver, bits) = read_u8(bits, 3);
         let (typ, bits) = read_u8(bits, 3);
 
@@ -97,7 +97,7 @@ impl Packet {
     }
 }
 
-fn parse_lit(bits: &BitSlice<Msb0, u8>) -> (PacketType, &BitSlice<Msb0, u8>) {
+fn parse_lit(bits: &BitSlice<u8, Msb0>) -> (PacketType, &BitSlice<u8, Msb0>) {
     let mut litvec = BitVec::new();
 
     let mut bits = bits;
@@ -115,9 +115,9 @@ fn parse_lit(bits: &BitSlice<Msb0, u8>) -> (PacketType, &BitSlice<Msb0, u8>) {
 }
 
 fn parse_op(
-    bits: &BitSlice<Msb0, u8>,
+    bits: &BitSlice<u8, Msb0>,
     typ: impl FnOnce(Vec<Packet>) -> PacketType,
-) -> (PacketType, &BitSlice<Msb0, u8>) {
+) -> (PacketType, &BitSlice<u8, Msb0>) {
     let (i, bits) = bits.split_at(1);
     if *i.first().unwrap() {
         parse_fixed_len_op(bits, typ)
@@ -127,9 +127,9 @@ fn parse_op(
 }
 
 fn parse_fixed_len_op(
-    bits: &BitSlice<Msb0, u8>,
+    bits: &BitSlice<u8, Msb0>,
     typ: impl FnOnce(Vec<Packet>) -> PacketType,
-) -> (PacketType, &BitSlice<Msb0, u8>) {
+) -> (PacketType, &BitSlice<u8, Msb0>) {
     let (l, mut bits) = read_u16(bits, 11);
     let mut packets = vec![];
     for _ in 0..l {
@@ -142,9 +142,9 @@ fn parse_fixed_len_op(
 }
 
 fn parse_fixed_size_op(
-    bits: &BitSlice<Msb0, u8>,
+    bits: &BitSlice<u8, Msb0>,
     typ: impl FnOnce(Vec<Packet>) -> PacketType,
-) -> (PacketType, &BitSlice<Msb0, u8>) {
+) -> (PacketType, &BitSlice<u8, Msb0>) {
     let (l, bits) = read_u16(bits, 15);
     let (mut bits1, bits) = bits.split_at(l as usize);
     let mut packets = vec![];
@@ -157,13 +157,13 @@ fn parse_fixed_size_op(
     (typ(packets), bits)
 }
 
-fn read_u8(bits: &BitSlice<Msb0, u8>, n: usize) -> (u8, &BitSlice<Msb0, u8>) {
+fn read_u8(bits: &BitSlice<u8, Msb0>, n: usize) -> (u8, &BitSlice<u8, Msb0>) {
     let (v, bits) = bits.split_at(n);
     let v = v.iter().fold(0, |v, b| v << 1 | (*b as u8));
     (v, bits)
 }
 
-fn read_u16(bits: &BitSlice<Msb0, u8>, n: usize) -> (u16, &BitSlice<Msb0, u8>) {
+fn read_u16(bits: &BitSlice<u8, Msb0>, n: usize) -> (u16, &BitSlice<u8, Msb0>) {
     let (v, bits) = bits.split_at(n);
     let v = v.iter().fold(0, |v, b| v << 1 | (*b as u16));
     (v, bits)

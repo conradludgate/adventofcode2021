@@ -105,7 +105,7 @@ impl Challenge for Day04 {
                 let completed = boards.drain_filter(|board| board.is_bingo(n)).last();
                 boards
                     .is_empty()
-                    .then(|| completed)
+                    .then_some(completed)
                     .flatten()
                     .map(|board| board.count_unmarked() * n)
             })

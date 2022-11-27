@@ -1,4 +1,3 @@
-#![feature(int_abs_diff)]
 use aoc::{Challenge, Parser as ChallengeParser};
 use nom::{
     character::{complete::one_of, streaming::line_ending},
@@ -20,7 +19,7 @@ impl<'i> ChallengeParser<'i> for Day15 {
     }
 }
 
-impl<'i> Challenge for Day15 {
+impl Challenge for Day15 {
     const NAME: &'static str = env!("CARGO_PKG_NAME");
 
     fn part_one(self) -> usize {
